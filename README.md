@@ -11,7 +11,9 @@ Presentations for:
 2. radarODE-MTL
 3. Introduction of popular MTL optimization stratigies
 
-:partying_face: Any problem please send them in Issues or Email [:email:](yuanyuan.zhang16@student.xjtlu.edu.cn).
+Our recent work [CFT-RFcardi](https://github.com/ZYY0844/CFT-RFcardi) employed an easy-to-use framework with a pre-processed dataset. We suggest that you have a look at our new work for a quick implementation and validation.
+
+:partying_face: Any problem please send them in Issues or Email [:email:](yz52357@uga.edu).
 
 ## Intuitive Explanation and Introduction
 Radar-based vital sign monitoring has been invested in for decades, and the community always pursues capturing more fine-grained cardiac signals with better noise robustness (especially for body movement or moving subjects). 
