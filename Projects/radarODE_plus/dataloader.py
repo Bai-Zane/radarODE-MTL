@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, ConcatDataset
 def des_path_finder(index,path):
     for roots, dirs, files in os.walk(path):
         for dir_ in dirs:
-            if re.search(f'_{index}_', dir_):
+            if re.search(f'_{index}_', dir_) or re.match(fr'obj{index}_', dir_, flags=re.IGNORECASE):
                 return os.path.join(roots, dir_)
 
 def get_spectrum_ecg_obj(data_root, selected_IDs, batch_size=4, n_workers=8, is_parallel=False, select_sample=False, visual=False):

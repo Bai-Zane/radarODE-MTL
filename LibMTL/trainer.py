@@ -81,7 +81,7 @@ class Trainer(nn.Module):
                  save_path=None, load_path=None, modelName='best', **kwargs):
         super(Trainer, self).__init__()
         
-        self.device = torch.device('cuda:0')
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.kwargs = kwargs
         self.task_dict = task_dict
         self.task_num = len(task_dict)
@@ -307,8 +307,9 @@ class Trainer(nn.Module):
                         self.meter.update(test_pred, test_gt, task)
         self.meter.record_time('end')
         self.meter.get_score()
-        test_loss_buffer[:, epoch] = self.meter.loss_item
-        np.save(os.path.join(self.save_path, f'best_{self.modelName}_test.npy'), test_loss_buffer)
+        if test_loss_buffer is not None and epoch is not None:
+            test_loss_buffer[:, epoch] = self.meter.loss_item
+            np.save(os.path.join(self.save_path, f'best_{self.modelName}_test.npy'), test_loss_buffer)
         self.meter.display(epoch=epoch, mode=mode)
         improvement = self.meter.improvement
         self.meter.reinit()

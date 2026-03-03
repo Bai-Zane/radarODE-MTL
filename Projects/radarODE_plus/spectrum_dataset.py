@@ -77,7 +77,7 @@ def down_sample(ecg, target_len=200):
 def des_path_finder(index,path):
     for roots, dirs, files in os.walk(path):
         for dir_ in dirs:
-            if re.search(f'_{index}_', dir_):
+            if re.search(f'_{index}_', dir_) or re.match(fr'obj{index}_', dir_, flags=re.IGNORECASE):
                 return os.path.join(roots, dir_)
 
 class SpectrumECGDataset(Dataset):

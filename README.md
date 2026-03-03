@@ -70,6 +70,18 @@ Dataset
 The input size of the radarODE and radarODE-MTL are the spectrograms with size 50x71x120 (e.g., sst_seg_0.npy), with 71 for frequency and 120 for 4-sec segments. The ground truth ECG, anchor, cycle length can be fomulated as in the paper. You may use the example code [MMECG_to_SST
 ](MMECG_to_SST.m) to generate SST spectrograms, or any time-frequency representation tools are applicable.
 
+## Reproducible Pipeline (Raw Radar + Raw ECG)
+An end-to-end, runnable preprocessing/training path is provided in:
+
+- [REPRODUCE.md](REPRODUCE.md)
+
+It includes:
+
+1. environment setup (`requirements.txt`)
+2. raw trial preprocessing script (`tools/prepare_radarode_dataset.py`)
+3. generation of `sst_seg_*.npy`, `ecg_seg_*.npy`, `anchor_seg_*.npy`
+4. train/test commands for `Projects/radarODE_plus/main.py`
+
 ## Run the Model
 You can find the arguments and settings in:
 
