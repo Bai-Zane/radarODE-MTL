@@ -2,7 +2,7 @@ import torch, os, sys, re
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-# for vscode
+# 用于vscode
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 from LibMTL.config import LibMTL_args, prepare_args
@@ -30,27 +30,27 @@ def parse_args(parser):
         scheduler='cos',
     )
     parser.add_argument('--train_bs', default=32, type=int,
-                        help='batch size for training')
+                        help='训练时的batch size')
     parser.add_argument('--test_bs', default=32, type=int,
-                        help='batch size for test')
+                        help='测试时的batch size')
     parser.add_argument('--epochs', default=200,
-                        type=int, help='training epochs')
+                        type=int, help='训练轮数')
     parser.add_argument('--dataset_path', default='./Dataset',
-                        type=str, help='dataset root path')
+                        type=str, help='数据集根路径')
     parser.add_argument('--save_name', default='EGA',
-                        type=str, help='checkpoint name suffix')
-    parser.add_argument('--num_workers', default=8, type=int, help='dataloader workers')
-    # if True, only select 100 samples for training and testing
+                        type=str, help='检查点名称后缀')
+    parser.add_argument('--num_workers', default=8, type=int, help='数据加载器工作进程数')
+    # 如果为True，仅选择100个样本进行训练和测试
     parser.add_argument('--select_sample', default=False,
-                        type=bool, help='select sample')
-    parser.add_argument('--aug_snr', default=100, type=int, help='100 for no aug otherwise the SNR')
-    parser.add_argument('--n_epochs', default=200, type=int, help='training epochs')
-    parser.add_argument('--batch_size', default=22, type=int, help='train/test batch size')
-    parser.add_argument('--eta_min', default=5e-5, type=float, help='eta_min for cosine scheduler')
-    parser.add_argument('--T_max', default=100, type=int, help='T_max for cosine scheduler')
-    parser.add_argument('--id_train_max', default=88, type=int, help='max trial id included in split')
+                        type=bool, help='选择样本')
+    parser.add_argument('--aug_snr', default=100, type=int, help='100表示无数据增强，否则为SNR值')
+    parser.add_argument('--n_epochs', default=200, type=int, help='训练轮数')
+    parser.add_argument('--batch_size', default=22, type=int, help='训练/测试batch size')
+    parser.add_argument('--eta_min', default=5e-5, type=float, help='余弦调度器的eta_min')
+    parser.add_argument('--T_max', default=100, type=int, help='余弦调度器的T_max')
+    parser.add_argument('--id_train_max', default=88, type=int, help='分割中包含的最大试验ID')
     parser.add_argument('--test_ids', default='75,76,77,78,79,80,81,82,83,84,85',
-                        type=str, help='comma-separated test IDs; non-existing IDs are ignored')
+                        type=str, help='逗号分隔的测试ID；不存在的ID将被忽略')
     return parser.parse_args()
 
 def _discover_available_ids(dataset_path):
@@ -88,11 +88,11 @@ def main(params):
     requested_test = _parse_test_ids(params.test_ids)
     ID_test = np.array([i for i in requested_test if i in ID_all], dtype=int)
     if ID_test.size == 0:
-        # fallback for small/custom datasets
+        # 小型/自定义数据集的回退处理
         ID_test = np.array([int(ID_all[-1])], dtype=int)
     ID_train = np.array([i for i in ID_all if i not in set(ID_test)], dtype=int)
     if ID_train.size == 0:
-        print(f'Warning: no exclusive training IDs left; using all IDs for training. ID_all={ID_all}, ID_test={ID_test}')
+        print(f'警告: 没有剩余独占的训练ID；使用所有ID进行训练。ID_all={ID_all}, ID_test={ID_test}')
         ID_train = ID_all.copy()
 
     # ID_test = np.array([1])
@@ -109,7 +109,7 @@ def main(params):
     testloader = torch.utils.data.DataLoader(
         dataset=radarODE_test_set, batch_size=params.test_bs, shuffle=True, num_workers=params.num_workers, pin_memory=True, drop_last=True)
 
-    # define tasks
+    # 定义任务
     task_dict = {'ECG_shape': {'metrics': ['norm_MSE', 'MSE', 'CE'],
                                'metrics_fn': shapeMetric(),
                                'loss_fn': shapeLoss(),
@@ -122,9 +122,9 @@ def main(params):
                             'metrics_fn': anchorMetric(),
                             'loss_fn': anchorLoss(),
                             'weight': [0]}}
-    
-    # # define backbone and en/decoders
-    def encoder_class(): 
+
+    # # 定义骨干网络和编/解码器
+    def encoder_class():
         return backbone(in_channels=50)
     num_out_channels = {'PPI': 260, 'Anchor': 200}
     decoders = nn.ModuleDict({'ECG_shape': shapeDecoder(),
@@ -204,13 +204,13 @@ if __name__ == "__main__":
     params = parse_args(LibMTL_args)
     os.makedirs(params.save_path, exist_ok=True)
 
-    # set device
+    # 设置设备
     set_device(params.gpu_id)
-    # set random seed
+    # 设置随机种子
     set_random_seed(params.seed)
     params.train_bs, params.test_bs = params.batch_size, params.batch_size
     params.epochs = params.n_epochs
-    # 100 for no noise otherwise the SNR, 6,3,0,-1,-2,-3 for SNR, 101 for 1 sec extensive abrupt noise, 111 for 1 sec mild abrupt noise
+    # 100表示无噪声，否则为SNR值，6,3,0,-1,-2,-3表示SNR，101表示1秒严重突发噪声，111表示1秒轻微突发噪声
     if not params.save_name:
         params.save_name = f'{params.weighting}'
 

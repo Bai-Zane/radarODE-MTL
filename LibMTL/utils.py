@@ -3,14 +3,14 @@ import numpy as np
 import torch.nn as nn
 
 def get_root_dir():
-    r"""Return the root path of project."""
+    r"""返回项目根路径。"""
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def set_random_seed(seed):
-    r"""Set the random seed for reproducibility.
+    r"""设置随机种子以确保可复现性。
 
     Args:
-        seed (int, default=0): The random seed.
+        seed (int, default=0): 随机种子。
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -20,18 +20,18 @@ def set_random_seed(seed):
         torch.backends.cudnn.benchmark = False
         
 def set_device(gpu_id):
-    r"""Set the device where model and data will be allocated. 
+    r"""设置模型和数据将被分配到的设备。
 
     Args:
-        gpu_id (str, default='0'): The id of gpu.
+        gpu_id (str, default='0'): GPU 的 ID。
     """
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
 
 def count_parameters(model):
-    r'''Calculate the number of parameters for a model.
+    r'''计算模型的参数数量。
 
     Args:
-        model (torch.nn.Module): A neural network module.
+        model (torch.nn.Module): 神经网络模块。
     '''
     trainable_params = 0
     non_trainable_params = 0
@@ -46,19 +46,19 @@ def count_parameters(model):
     print('Non-trainable Params:', non_trainable_params)
         
 def count_improvement(base_result, new_result, weight):
-    r"""Calculate the improvement between two results as
+    r"""计算两个结果之间的改进量，公式如下：
 
     .. math::
-        \Delta_{\mathrm{p}}=100\%\times \frac{1}{T}\sum_{t=1}^T 
+        \Delta_{\mathrm{p}}=100\%\times \frac{1}{T}\sum_{t=1}^T
         \frac{1}{M_t}\sum_{m=1}^{M_t}\frac{(-1)^{w_{t,m}}(B_{t,m}-N_{t,m})}{B_{t,m}}.
 
     Args:
-        base_result (dict): A dictionary of scores of all metrics of all tasks.
-        new_result (dict): The same structure with ``base_result``.
-        weight (dict): The same structure with ``base_result`` while each element is binary integer representing whether higher or lower score is better.
+        base_result (dict): 所有任务的所有指标分数的字典。
+        new_result (dict): 与 ``base_result`` 结构相同。
+        weight (dict): 与 ``base_result`` 结构相同，每个元素是二进制整数，表示分数越高越好还是越低越好。
 
     Returns:
-        float: The improvement between ``new_result`` and ``base_result``.
+        float: ``new_result`` 相对于 ``base_result`` 的改进量。
 
     Examples::
 

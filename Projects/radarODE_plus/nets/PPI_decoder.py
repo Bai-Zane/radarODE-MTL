@@ -55,7 +55,7 @@ class ConvBlock(nn.Module):
 
         return x
 
-# not only for ppi but also for anchor decoder with differnet output_dim
+# 不仅用于PPI解码器，也可用于具有不同输出维度的anchor解码器
 class PPI_decoder(nn.Module):
     def __init__(self, output_dim, dim=1024):
         super().__init__()
@@ -98,7 +98,7 @@ class PPI_decoder(nn.Module):
                 m.bias.data.zeros_()
 
     def forward(self, x):
-        # all
+        # 全部
         x = x.squeeze(2)
         x = self.conv(x)
         x = self.transconv(x)

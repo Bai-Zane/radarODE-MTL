@@ -82,10 +82,10 @@ LibMTL_args = _parser
 
 
 def prepare_args(params):
-    r"""Return the configuration of hyperparameters, optimizier, and learning rate scheduler.
+    r"""返回超参数、优化器和学习率调度器的配置。
 
     Args:
-        params (argparse.Namespace): The command-line arguments.
+        params (argparse.Namespace): 命令行参数。
     """
     kwargs = {'weight_args': {}, 'arch_args': {}}
     if params.weighting in ['EW', 'UW', 'GradNorm', 'GLS', 'RLW', 'MGDA', 'IMTL',

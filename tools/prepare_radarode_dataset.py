@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-Prepare radarODE-MTL training dataset from raw trial files.
+从原始试验文件准备 radarODE-MTL 训练数据集。
 
-Output format (per trial folder):
-    sst_seg_<i>.npy     -> shape (50, 71, 120), float32
-    ecg_seg_<i>.npy     -> shape (variable,), float32
-    anchor_seg_<i>.npy  -> shape (200,), float32
+输出格式（每个试验文件夹）：
+    sst_seg_<i>.npy     -> 形状 (50, 71, 120), float32
+    ecg_seg_<i>.npy     -> 形状 (可变,), float32
+    anchor_seg_<i>.npy  -> 形状 (200,), float32
 
-Supported inputs:
-1) RCG mode (recommended for MMECG-style data):
-   - trial files containing preprocessed radar channels (RCG) and ECG
-2) ADC mode (experimental):
-   - trial files containing raw/near-raw ADC cube and ECG
-   - performs a reference extraction pipeline to get 50 radar channels
+支持的输入：
+1) RCG 模式（推荐用于 MMECG 风格数据）：
+   - 包含预处理雷达通道（RCG）和 ECG 的试验文件
+2) ADC 模式（实验性）：
+   - 包含原始/近原始 ADC 立方体和 ECG 的试验文件
+   - 执行参考提取流程以获得 50 个雷达通道
 
-Examples:
+示例：
     python tools/prepare_radarode_dataset.py \
         --input ./raw_trials \
         --output ./Dataset \
@@ -48,157 +48,157 @@ except ImportError:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Convert raw radar + ECG trials into radarODE-MTL training segments."
+        description="将原始雷达 + ECG 试验转换为 radarODE-MTL 训练片段。"
     )
     parser.add_argument(
         "--input",
         type=str,
         required=True,
-        help="Input trial file or directory with trial files (.mat/.npz/.npy).",
+        help="输入试验文件或包含试验文件的目录 (.mat/.npz/.npy)。",
     )
     parser.add_argument(
         "--output",
         type=str,
         required=True,
-        help="Output dataset root directory.",
+        help="输出数据集根目录。",
     )
     parser.add_argument(
         "--radar-source",
         type=str,
         choices=["rcg", "adc"],
         default="rcg",
-        help="Radar source type in input files.",
+        help="输入文件中的雷达源类型。",
     )
     parser.add_argument(
         "--glob",
         type=str,
         default="*.mat",
-        help="Glob pattern when --input is a directory (default: *.mat).",
+        help="当 --input 为目录时的 glob 模式（默认: *.mat）。",
     )
     parser.add_argument(
         "--ecg-key",
         type=str,
         default="ECG",
-        help="Key name for ECG in input file.",
+        help="输入文件中 ECG 的键名。",
     )
     parser.add_argument(
         "--rcg-key",
         type=str,
         default="RCG",
-        help="Key name for preprocessed radar channels in rcg mode.",
+        help="rcg 模式下预处理雷达通道的键名。",
     )
     parser.add_argument(
         "--adc-key",
         type=str,
         default="radar_adc",
-        help="Key name for ADC cube in adc mode.",
+        help="adc 模式下 ADC 立方体的键名。",
     )
     parser.add_argument(
         "--subject-id-key",
         type=str,
         default="id",
-        help="Optional key for subject ID; used in output folder naming.",
+        help="受试者 ID 的可选键；用于输出文件夹命名。",
     )
     parser.add_argument(
         "--status-key",
         type=str,
         default="physistatus",
-        help="Optional key for physiological status; used in output folder naming.",
+        help="生理状态的可选键；用于输出文件夹命名。",
     )
     parser.add_argument(
         "--signal-fs",
         type=float,
         default=200.0,
-        help="Sampling rate (Hz) of ECG and RCG signals (default 200).",
+        help="ECG 和 RCG 信号的采样率（Hz）（默认 200）。",
     )
     parser.add_argument(
         "--sst-time-fs",
         type=float,
         default=30.0,
-        help="Target time-axis sampling rate (Hz) for SST (default 30).",
+        help="SST 目标时间轴采样率（Hz）（默认 30）。",
     )
     parser.add_argument(
         "--sst-window-sec",
         type=float,
         default=4.0,
-        help="SST segment window length in seconds (default 4).",
+        help="SST 片段窗口长度（秒）（默认 4）。",
     )
     parser.add_argument(
         "--sst-freq-min",
         type=float,
         default=1.0,
-        help="Minimum SST frequency in Hz (default 1).",
+        help="最小 SST 频率（Hz）（默认 1）。",
     )
     parser.add_argument(
         "--sst-freq-max",
         type=float,
         default=25.0,
-        help="Maximum SST frequency in Hz (default 25).",
+        help="最大 SST 频率（Hz）（默认 25）。",
     )
     parser.add_argument(
         "--sst-freq-bins",
         type=int,
         default=71,
-        help="Number of output SST frequency bins (default 71).",
+        help="输出 SST 频率 bins 数量（默认 71）。",
     )
     parser.add_argument(
         "--expected-radar-channels",
         type=int,
         default=50,
-        help="Expected number of radar channels used by model (default 50).",
+        help="模型使用的预期雷达通道数（默认 50）。",
     )
     parser.add_argument(
         "--ecg-output-len",
         type=int,
         default=200,
-        help="Anchor output length (default 200).",
+        help="锚点输出长度（默认 200）。",
     )
     parser.add_argument(
         "--anchor-sigma",
         type=float,
         default=2.5,
-        help="Anchor Gaussian sigma in samples (default 2.5).",
+        help="锚点高斯 sigma（样本）（默认 2.5）。",
     )
     parser.add_argument(
         "--min-cycle-len",
         type=int,
         default=80,
-        help="Minimum ECG cycle length in samples (default 80).",
+        help="最小 ECG 周期长度（样本）（默认 80）。",
     )
     parser.add_argument(
         "--max-cycle-len",
         type=int,
         default=260,
-        help="Maximum ECG cycle length in samples (default 260).",
+        help="最大 ECG 周期长度（样本）（默认 260）。",
     )
     parser.add_argument(
         "--save-manifest",
         action="store_true",
-        help="Save a manifest JSON for each processed trial.",
+        help="为每个处理的试验保存清单 JSON。",
     )
     parser.add_argument(
         "--adc-num-tx",
         type=int,
         default=3,
-        help="ADC mode: number of TX antennas (default 3).",
+        help="ADC 模式：TX 天线数量（默认 3）。",
     )
     parser.add_argument(
         "--adc-slowtime-fs",
         type=float,
         default=200.0,
-        help="ADC mode: resulting slow-time sampling rate used for RCG extraction.",
+        help="ADC 模式：用于 RCG 提取的慢时间采样率。",
     )
     parser.add_argument(
         "--adc-heartband-min",
         type=float,
         default=0.8,
-        help="ADC mode: lower bound (Hz) of cardiac band for channel/range selection.",
+        help="ADC 模式：通道/范围选择的心脏频带下限（Hz）。",
     )
     parser.add_argument(
         "--adc-heartband-max",
         type=float,
         default=3.0,
-        help="ADC mode: upper bound (Hz) of cardiac band for channel/range selection.",
+        help="ADC 模式：通道/范围选择的心脏频带上限（Hz）。",
     )
     return parser.parse_args()
 
@@ -208,7 +208,7 @@ def _require_neurokit2():
         import neurokit2 as nk  # type: ignore
     except ImportError as exc:
         raise ImportError(
-            "neurokit2 is required. Install dependencies first (pip install -r requirements.txt)."
+            "需要 neurokit2。请先安装依赖（pip install -r requirements.txt）。"
         ) from exc
     return nk
 
@@ -218,7 +218,7 @@ def _require_ssqueezepy():
         from ssqueezepy import ssq_cwt  # type: ignore
     except ImportError as exc:
         raise ImportError(
-            "ssqueezepy is required. Install dependencies first (pip install -r requirements.txt)."
+            "需要 ssqueezepy。请先安装依赖（pip install -r requirements.txt）。"
         ) from exc
     return ssq_cwt
 
@@ -248,17 +248,17 @@ def load_trial_file(path: Path) -> Dict[str, Any]:
         arr = np.load(path, allow_pickle=True)
         if isinstance(arr, np.ndarray) and arr.shape == () and isinstance(arr.item(), dict):
             return dict(arr.item())
-        raise ValueError(f"{path} is .npy but not a serialized dict; use .mat/.npz or dict-like .npy.")
+        raise ValueError(f"{path} 是 .npy 但不是序列化的字典；请使用 .mat/.npz 或类字典的 .npy。")
     if suffix == ".mat":
         try:
             return loadmat(path, squeeze_me=True, struct_as_record=False)
         except NotImplementedError:
             if mat73 is None:
                 raise RuntimeError(
-                    f"{path} appears to be MATLAB v7.3. Install 'mat73' to read it."
+                    f"{path} 似乎是 MATLAB v7.3 格式。请安装 'mat73' 来读取它。"
                 )
             return mat73.loadmat(path)
-    raise ValueError(f"Unsupported file extension: {suffix}")
+    raise ValueError(f"不支持的文件扩展名: {suffix}")
 
 
 def _extract_from_struct(data: Any, key: str) -> Any:
@@ -280,7 +280,7 @@ def resolve_trial_fields(
     radar_source: str,
 ) -> Tuple[np.ndarray, np.ndarray, str, str]:
     """
-    Returns:
+    返回:
         radar_signal, ecg_signal, subject_id, status
     """
     root = loaded
@@ -306,10 +306,10 @@ def resolve_trial_fields(
         status = loaded.get(status_key, "UNK")
 
     if ecg is None:
-        raise KeyError(f"Cannot find ECG key '{ecg_key}' in loaded trial.")
+        raise KeyError(f"在加载的试验中找不到 ECG 键 '{ecg_key}'。")
     if radar is None:
         missing = rcg_key if radar_source == "rcg" else adc_key
-        raise KeyError(f"Cannot find radar key '{missing}' in loaded trial.")
+        raise KeyError(f"在加载的试验中找不到雷达键 '{missing}'。")
 
     ecg_arr = _safe_to_numpy(ecg).astype(np.float32).squeeze()
     radar_arr = _safe_to_numpy(radar)
@@ -340,42 +340,42 @@ def extract_rcg_from_adc(
     band_max: float,
 ) -> np.ndarray:
     """
-    Reference ADC -> RCG extraction.
+    参考 ADC -> RCG 提取。
 
-    Expected ADC shape: [frames, chirps, rx, adc_samples]
-    (real/imag packed or complex).
+    预期的 ADC 形状: [frames, chirps, rx, adc_samples]
+    (实部/虚部打包或复数)。
     """
     if adc.ndim != 4:
         raise ValueError(
-            f"ADC input must be 4D [frames, chirps, rx, adc_samples], got shape {adc.shape}"
+            f"ADC 输入必须是 4D [frames, chirps, rx, adc_samples], 得到形状 {adc.shape}"
         )
     adc = _as_complex(adc)
 
     frames, chirps, rx, adc_samples = adc.shape
     usable_chirps = (chirps // num_tx) * num_tx
     if usable_chirps == 0:
-        raise ValueError(f"Invalid chirp count {chirps} for num_tx={num_tx}.")
+        raise ValueError(f"chirp 数量 {chirps} 对于 num_tx={num_tx} 无效。")
 
     adc = adc[:, :usable_chirps, :, :]
     chirps_per_tx = usable_chirps // num_tx
     adc = adc.reshape(frames, chirps_per_tx, num_tx, rx, adc_samples)
 
-    # Range FFT on fast-time axis.
+    # 在快时间轴上进行距离 FFT。
     rng = np.fft.fft(adc, axis=-1)
     rng = rng[:, :, :, :, : adc_samples // 2]
 
-    # Flatten slow-time and virtual channels.
-    # slow-time: frames * chirps_per_tx, virtual channels: num_tx * rx.
+    # 展平慢时间和虚拟通道。
+    # 慢时间: frames * chirps_per_tx, 虚拟通道: num_tx * rx。
     slow = rng.reshape(frames * chirps_per_tx, num_tx * rx, adc_samples // 2)
 
-    # Remove static clutter.
+    # 去除静态杂波。
     slow = slow - slow.mean(axis=0, keepdims=True)
 
-    # Convert to unwrapped phase over slow-time.
+    # 转换为慢时间上的展开相位。
     phase = np.unwrap(np.angle(slow), axis=0)
     phase = signal.detrend(phase, axis=0, type="linear")
 
-    # Rank (virtual-channel, range-bin) candidates by cardiac-band energy.
+    # 按心脏频带能量对 (虚拟通道, 距离 bin) 候选进行排序。
     n_t, n_v, n_r = phase.shape
     flattened = phase.reshape(n_t, n_v * n_r)
     freqs, psd = signal.welch(flattened, fs=slowtime_fs, axis=0, nperseg=min(512, n_t))
@@ -387,7 +387,7 @@ def extract_rcg_from_adc(
     top_idx = np.argsort(score)[-expected_channels:]
     rcg = flattened[:, top_idx]
 
-    # Ensure shape [time, expected_channels].
+    # 确保形状为 [time, expected_channels]。
     if rcg.shape[1] < expected_channels:
         padded = np.zeros((rcg.shape[0], expected_channels), dtype=np.float32)
         padded[:, : rcg.shape[1]] = rcg
@@ -400,9 +400,9 @@ def extract_rcg_from_adc(
 def ensure_rcg_shape(rcg: np.ndarray, expected_channels: int) -> np.ndarray:
     rcg = np.asarray(rcg).astype(np.float32)
     if rcg.ndim != 2:
-        raise ValueError(f"RCG must be 2D [time, channels], got shape {rcg.shape}")
+        raise ValueError(f"RCG 必须是 2D [time, channels], 得到形状 {rcg.shape}")
 
-    # Try to fix orientation if channels appear on first axis.
+    # 如果通道出现在第一轴，尝试修复方向。
     if rcg.shape[1] != expected_channels and rcg.shape[0] == expected_channels:
         rcg = rcg.T
 
@@ -457,7 +457,7 @@ def compute_full_sst(
         mask = (freq >= freq_min) & (freq <= freq_max)
         if not np.any(mask):
             raise RuntimeError(
-                f"No SST frequencies in [{freq_min}, {freq_max}] for channel {c}."
+                f"通道 {c} 在 [{freq_min}, {freq_max}] 中没有 SST 频率。"
             )
         sst = sst[mask]
         freq = freq[mask]
@@ -481,7 +481,7 @@ def detect_r_peaks(ecg: np.ndarray, fs: float) -> np.ndarray:
     _, info = nk.ecg_peaks(cleaned, sampling_rate=fs, method="neurokit")
     peaks = np.asarray(info.get("ECG_R_Peaks", []), dtype=np.int64)
     if peaks.size < 3:
-        # fallback
+        # 回退方案
         peaks, _ = signal.find_peaks(cleaned, distance=max(1, int(0.3 * fs)))
         peaks = np.asarray(peaks, dtype=np.int64)
     return peaks
@@ -505,7 +505,7 @@ def build_trial_folder_name(subject_id: str, status: str, trial_stem: str) -> st
     sid = _sanitize_name(subject_id)
     st = _sanitize_name(status.upper())
     ts = _sanitize_name(trial_stem)
-    # Keep "_<id>_" token for compatibility with existing dataloaders.
+    # 保留 "_<id>_" 标记以兼容现有的数据加载器。
     return f"obj{sid}_{st}_{ts}_{sid}_"
 
 
@@ -539,7 +539,7 @@ def process_trial(
     rcg = align_radar_to_ecg_length(rcg, len(ecg))
     rpeaks = detect_r_peaks(ecg, args.signal_fs)
     if rpeaks.size < 3:
-        raise RuntimeError(f"Insufficient R peaks detected in {trial_path.name}: {rpeaks.size}")
+        raise RuntimeError(f"在 {trial_path.name} 中检测到的 R 峰不足: {rpeaks.size}")
 
     full_sst = compute_full_sst(
         rcg,
@@ -629,14 +629,14 @@ def iter_input_files(input_path: Path, glob_pattern: str) -> List[Path]:
     if input_path.is_dir():
         files = sorted(input_path.glob(glob_pattern))
         if not files:
-            # fallback: support mixed extensions quickly
+            # 回退：快速支持混合扩展名
             files = sorted(
                 list(input_path.glob("*.mat"))
                 + list(input_path.glob("*.npz"))
                 + list(input_path.glob("*.npy"))
             )
         return files
-    raise FileNotFoundError(f"Input path not found: {input_path}")
+    raise FileNotFoundError(f"找不到输入路径: {input_path}")
 
 
 def main() -> None:
@@ -647,7 +647,7 @@ def main() -> None:
 
     files = iter_input_files(input_path, args.glob)
     if not files:
-        raise RuntimeError(f"No input files matched under {input_path} with pattern {args.glob}")
+        raise RuntimeError(f"在 {input_path} 下使用模式 {args.glob} 没有匹配的输入文件")
 
     summaries: List[Dict[str, Any]] = []
     for fp in files:
@@ -655,20 +655,20 @@ def main() -> None:
             summary = process_trial(fp, args)
             summaries.append(summary)
             print(
-                f"[OK] {fp.name}: segments={summary['written_segments']}, "
-                f"dropped_cycle={summary['dropped_cycle']}, "
-                f"dropped_boundary={summary['dropped_boundary']}"
+                f"[OK] {fp.name}: 片段={summary['written_segments']}, "
+                f"丢弃周期={summary['dropped_cycle']}, "
+                f"丢弃边界={summary['dropped_boundary']}"
             )
         except Exception as exc:  # noqa: BLE001
-            print(f"[FAIL] {fp.name}: {exc}")
+            print(f"[失败] {fp.name}: {exc}")
 
     total = sum(x["written_segments"] for x in summaries)
-    print(f"\nProcessed {len(summaries)}/{len(files)} trials, total segments: {total}")
+    print(f"\n处理了 {len(summaries)}/{len(files)} 个试验, 总片段数: {total}")
 
     global_manifest = output_path / "prepare_manifest.json"
     with open(global_manifest, "w", encoding="utf-8") as f:
         json.dump(summaries, f, indent=2)
-    print(f"Saved summary: {global_manifest}")
+    print(f"保存摘要: {global_manifest}")
 
 
 if __name__ == "__main__":

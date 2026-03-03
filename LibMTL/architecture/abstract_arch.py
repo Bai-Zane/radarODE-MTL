@@ -5,21 +5,21 @@ import numpy as np
 
 
 class AbsArchitecture(nn.Module):
-    r"""An abstract class for MTL architectures.
+    r"""MTL架构的抽象类。
 
     Args:
-        task_name (list): A list of strings for all tasks.
-        encoder_class (class): A neural network class.
-        decoders (dict): A dictionary of name-decoder pairs of type (:class:`str`, :class:`torch.nn.Module`).
-        rep_grad (bool): If ``True``, the gradient of the representation for each task can be computed.
-        multi_input (bool): Is ``True`` if each task has its own input data, otherwise is ``False``. 
-        device (torch.device): The device where model and data will be allocated. 
-        kwargs (dict): A dictionary of hyperparameters of architectures.
-     
+        task_name (list): 所有任务的字符串列表。
+        encoder_class (class): 神经网络类。
+        decoders (dict): 名称-解码器对的字典，类型为 (:class:`str`, :class:`torch.nn.Module`)。
+        rep_grad (bool): 如果为 ``True``，可以计算每个任务表示的梯度。
+        multi_input (bool): 如果每个任务有自己的输入数据则为 ``True``，否则为 ``False``。
+        device (torch.device): 模型和数据将被分配到的设备。
+        kwargs (dict): 架构超参数的字典。
+
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):
         super(AbsArchitecture, self).__init__()
-        
+
         self.task_name = task_name
         self.task_num = len(task_name)
         self.encoder_class = encoder_class
@@ -28,20 +28,20 @@ class AbsArchitecture(nn.Module):
         self.multi_input = multi_input
         self.device = device
         self.kwargs = kwargs
-        
+
         if self.rep_grad:
             self.rep_tasks = {}
             self.rep = {}
-    
+
     def forward(self, inputs, task_name=None):
         r"""
 
-        Args: 
-            inputs (torch.Tensor): The input data.
-            task_name (str, default=None): The task name corresponding to ``inputs`` if ``multi_input`` is ``True``.
-        
+        Args:
+            inputs (torch.Tensor): 输入数据。
+            task_name (str, default=None): 如果 ``multi_input`` 为 ``True``，对应 ``inputs`` 的任务名称。
+
         Returns:
-            dict: A dictionary of name-prediction pairs of type (:class:`str`, :class:`torch.Tensor`).
+            dict: 名称-预测对的字典，类型为 (:class:`str`, :class:`torch.nn.Module`)。
         """
         out = {}
         s_rep = self.encoder(inputs)
@@ -53,17 +53,17 @@ class AbsArchitecture(nn.Module):
             ss_rep = self._prepare_rep(ss_rep, task, same_rep)
             out[task] = self.decoders[task](ss_rep)
         return out
-    
+
     def get_share_params(self):
-        r"""Return the shared parameters of the model.
+        r"""返回模型的共享参数。
         """
         return self.encoder.parameters()
 
     def zero_grad_share_params(self):
-        r"""Set gradients of the shared parameters to zero.
+        r"""将共享参数的梯度设置为零。
         """
         self.encoder.zero_grad(set_to_none=False)
-        
+
     def _prepare_rep(self, rep, task, same_rep=None):
         if self.rep_grad:
             if not same_rep:

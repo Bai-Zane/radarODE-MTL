@@ -6,14 +6,14 @@ import numpy as np
 from LibMTL.architecture.abstract_arch import AbsArchitecture
 
 class MMoE(AbsArchitecture):
-    r"""Multi-gate Mixture-of-Experts (MMoE).
-    
-    This method is proposed in `Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts (KDD 2018) <https://dl.acm.org/doi/10.1145/3219819.3220007>`_ \
-    and implemented by us.
+    r"""多门混合专家 (Multi-gate Mixture-of-Experts, MMoE)。
+
+    该方法在 `Modeling Task Relationships in Multi-task Learning with Multi-gate Mixture-of-Experts (KDD 2018) <https://dl.acm.org/doi/10.1145/3219819.3220007>`_ 中提出，
+    并由我们实现。
 
     Args:
-        img_size (list): The size of input data. For example, [3, 244, 244] denotes input images with size 3x224x224.
-        num_experts (int): The number of experts shared for all tasks. Each expert is an encoder network.
+        img_size (list): 输入数据的尺寸。例如，[3, 244, 244] 表示输入图像的尺寸为 3x224x224。
+        num_experts (int): 所有任务共享的专家数量。每个专家是一个编码器网络。
 
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):

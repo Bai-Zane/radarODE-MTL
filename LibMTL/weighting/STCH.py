@@ -6,10 +6,14 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class STCH(AbsWeighting):
-    r"""STCH.
-    
-    This method is proposed in `Smooth Tchebycheff Scalarization for Multi-Objective Optimization (ICML 2024) <https://openreview.net/forum?id=m4dO5L6eCp>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/Xi-L/STCH/tree/main/STCH_MTL>`_. 
+    r"""STCH (Smooth Tchebycheff Scalarization，平滑切比雪夫标量化).
+
+    该方法在 `Smooth Tchebycheff Scalarization for Multi-Objective Optimization (ICML 2024) <https://openreview.net/forum?id=m4dO5L6eCp>`_ 中提出，
+    并基于 `官方 PyTorch 实现 <https://github.com/Xi-L/STCH/tree/main/STCH_MTL>`_ 修改实现。
+
+    Args:
+        STCH_mu (float): 平滑参数。
+        STCH_warmup_epoch (int): 预热轮数。
 
     """
     def __init__(self):

@@ -6,16 +6,16 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class GradDrop(AbsWeighting):
-    r"""Gradient Sign Dropout (GradDrop).
-    
-    This method is proposed in `Just Pick a Sign: Optimizing Deep Multitask Models with Gradient Sign Dropout (NeurIPS 2020) <https://papers.nips.cc/paper/2020/hash/16002f7a455a94aa4e91cc34ebdb9f2d-Abstract.html>`_ \
-    and implemented by us.
+    r"""Gradient Sign Dropout (GradDrop，梯度符号随机失活).
+
+    该方法在 `Just Pick a Sign: Optimizing Deep Multitask Models with Gradient Sign Dropout (NeurIPS 2020) <https://papers.nips.cc/paper/2020/hash/16002f7a455a94aa4e91cc34ebdb9f2d-Abstract.html>`_ 中提出，
+    并由我们实现。
 
     Args:
-        leak (float, default=0.0): The leak parameter for the weighting matrix.
+        leak (float, default=0.0): 权重矩阵的泄漏参数。
 
     .. warning::
-            GradDrop is not supported by parameter gradients, i.e., ``rep_grad`` must be ``True``.
+            GradDrop 不支持参数梯度，即 ``rep_grad`` 必须为 ``True``。
 
     """
     def __init__(self):

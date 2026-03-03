@@ -6,7 +6,7 @@ class DeformConv2d(nn.Module):
     def __init__(self, inc, outc, kernel_size=3, padding=1, stride=1, bias=None, modulation=False):
         """
         Args:
-            modulation (bool, optional): If True, Modulated Defomable Convolution (Deformable ConvNets v2).
+            modulation (bool, optional): 如果为True，则使用调制可变形卷积 (Deformable ConvNets v2)。
         """
         super(DeformConv2d, self).__init__()
         self.kernel_size = kernel_size
@@ -55,10 +55,10 @@ class DeformConv2d(nn.Module):
         q_lb = torch.cat([q_lt[..., :N], q_rb[..., N:]], dim=-1)
         q_rt = torch.cat([q_rb[..., :N], q_lt[..., N:]], dim=-1)
 
-        # clip p
+        # 裁剪 p
         p = torch.cat([torch.clamp(p[..., :N], 0, x.size(2)-1), torch.clamp(p[..., N:], 0, x.size(3)-1)], dim=-1)
 
-        # bilinear kernel (b, h, w, N)
+        # 双线性核 (b, h, w, N)
         g_lt = (1 + (q_lt[..., :N].type_as(p) - p[..., :N])) * (1 + (q_lt[..., N:].type_as(p) - p[..., N:]))
         g_rb = (1 - (q_rb[..., :N].type_as(p) - p[..., :N])) * (1 - (q_rb[..., N:].type_as(p) - p[..., N:]))
         g_lb = (1 + (q_lb[..., :N].type_as(p) - p[..., :N])) * (1 - (q_lb[..., N:].type_as(p) - p[..., N:]))
@@ -76,7 +76,7 @@ class DeformConv2d(nn.Module):
                    g_lb.unsqueeze(dim=1) * x_q_lb + \
                    g_rt.unsqueeze(dim=1) * x_q_rt
 
-        # modulation
+        # 调制
         if self.modulation:
             m = m.contiguous().permute(0, 2, 3, 1)
             m = m.unsqueeze(dim=1)

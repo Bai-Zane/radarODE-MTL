@@ -17,15 +17,15 @@ default_input = torch.Tensor((
 
 def ode1_solver(input_params, ecg_len=200):
     """
-    ecg_len: length of ecg signal, determined by estimeated period
-    input_params: parameters for PQRST, with size (batch_size, 15)
+    ecg_len: ECG信号长度，由估计周期确定
+    input_params: PQRST参数，大小为 (batch_size, 15)
     return
-    ecg_signal: with size batch_size * ecg_len
+    ecg_signal: 大小为 batch_size * ecg_len
     """
     device = input_params.device
     ode_params = ODEParams(input_params.device, ecg_len)
     batchsize = input_params.shape[0]
-    # initial values (do not change)
+    # 初始值（不要更改）
     x = torch.tensor(
         [-0.417750770388669 for _ in range(input_params.shape[0])]).view(batchsize, 1).to(device)
     y = torch.tensor(
@@ -57,9 +57,9 @@ def ode1_solver(input_params, ecg_len=200):
     return z_signal.squeeze(2).permute(1, 0)
 
 def scale_output(input_params):
-    # use input_params as the percentage range to scale the default_input
+    # 使用input_params作为百分比范围来缩放default_input
     # default_input = torch.Tensor(default_input)
-    input_params = (1+1*input_params) * default_input.to(input_params.device) # 2 is the factor for percentage
+    input_params = (1+1*input_params) * default_input.to(input_params.device) # 2是百分比因子
 
     return input_params
 

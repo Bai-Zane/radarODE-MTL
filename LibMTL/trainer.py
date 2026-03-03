@@ -10,38 +10,37 @@ import LibMTL.architecture as architecture_method
 from tqdm import tqdm
 
 class Trainer(nn.Module):
-    r'''A Multi-Task Learning Trainer.
+    r'''多任务学习训练器。
 
-    This is a unified and extensible training framework for multi-task learning. 
+    这是一个统一且可扩展的多任务学习训练框架。
 
     Args:
-        task_dict (dict): A dictionary of name-information pairs of type (:class:`str`, :class:`dict`). \
-                            The sub-dictionary for each task has four entries whose keywords are named **metrics**, \
-                            **metrics_fn**, **loss_fn**, **weight** and each of them corresponds to a :class:`list`.
-                            The list of **metrics** has ``m`` strings, repersenting the name of ``m`` metrics \
-                            for this task. The list of **metrics_fn** has two elements, i.e., the updating and score \
-                            functions, meaning how to update thoes objectives in the training process and obtain the final \
-                            scores, respectively. The list of **loss_fn** has ``m`` loss functions corresponding to each \
-                            metric. The list of **weight** has ``m`` binary integers corresponding to each \
-                            metric, where ``1`` means the higher the score is, the better the performance, \
-                            ``0`` means the opposite.                           
-        weighting (class): A weighting strategy class based on :class:`LibMTL.weighting.abstract_weighting.AbsWeighting`.
-        architecture (class): An architecture class based on :class:`LibMTL.architecture.abstract_arch.AbsArchitecture`.
-        encoder_class (class): A neural network class.
-        decoders (dict): A dictionary of name-decoder pairs of type (:class:`str`, :class:`torch.nn.Module`).
-        rep_grad (bool): If ``True``, the gradient of the representation for each task can be computed.
-        multi_input (bool): Is ``True`` if each task has its own input data, otherwise is ``False``. 
-        optim_param (dict): A dictionary of configurations for the optimizier.
-        scheduler_param (dict): A dictionary of configurations for learning rate scheduler. \
-                                 Set it to ``None`` if you do not use a learning rate scheduler.
-        kwargs (dict): A dictionary of hyperparameters of weighting and architecture methods.
+        task_dict (dict): 一个由名称-信息对组成的字典，类型为(:class:`str`, :class:`dict`)。\
+                            每个任务的子字典有四个条目，关键字分别为 **metrics**、\
+                            **metrics_fn**、**loss_fn**、**weight**，每个都对应一个 :class:`list`。
+                            **metrics** 列表有 ``m`` 个字符串，表示该任务的 ``m`` 个评估指标名称。\
+                            **metrics_fn** 列表有两个元素，即更新函数和评分函数，\
+                            分别表示如何在训练过程中更新这些目标以及获得最终分数。\
+                            **loss_fn** 列表有 ``m`` 个损失函数，分别对应每个评估指标。\
+                            **weight** 列表有 ``m`` 个二进制整数，分别对应每个评估指标，\
+                            其中 ``1`` 表示分数越高性能越好，``0`` 表示相反。
+        weighting (class): 基于 :class:`LibMTL.weighting.abstract_weighting.AbsWeighting` 的加权策略类。
+        architecture (class): 基于 :class:`LibMTL.architecture.abstract_arch.AbsArchitecture` 的架构类。
+        encoder_class (class): 神经网络类。
+        decoders (dict): 一个由名称-解码器对组成的字典，类型为(:class:`str`, :class:`torch.nn.Module`)。
+        rep_grad (bool): 如果为 ``True``，可以计算每个任务的表示梯度。
+        multi_input (bool): 如果每个任务有自己的输入数据则为 ``True``，否则为 ``False``。
+        optim_param (dict): 优化器的配置字典。
+        scheduler_param (dict): 学习率调度器的配置字典。\
+                                 如果不使用学习率调度器，请设置为 ``None``。
+        kwargs (dict): 加权和架构方法的超参数字典。
 
     .. note::
-            It is recommended to use :func:`LibMTL.config.prepare_args` to return the dictionaries of ``optim_param``, \
-            ``scheduler_param``, and ``kwargs``.
+            建议使用 :func:`LibMTL.config.prepare_args` 返回 ``optim_param``、\
+            ``scheduler_param`` 和 ``kwargs`` 的字典。
 
     Examples::
-        
+
         import torch.nn as nn
         from LibMTL import Trainer
         from LibMTL.loss import CE_loss_fn
@@ -55,10 +54,10 @@ class Trainer(nn.Module):
                            'metrics_fn': [acc_update_fun, acc_score_fun],
                            'loss_fn': [CE_loss_fn],
                            'weight': [1]}}
-        
+
         decoders = {'A': nn.Linear(512, 31)}
-        
-        # You can use command-line arguments and return configurations by ``prepare_args``.
+
+        # 你可以使用命令行参数并通过 ``prepare_args`` 返回配置。
         # kwargs, optim_param, scheduler_param = prepare_args(params)
         optim_param = {'optim': 'adam', 'lr': 1e-3, 'weight_decay': 1e-4}
         scheduler_param = {'scheduler': 'step'}
@@ -158,15 +157,15 @@ class Trainer(nn.Module):
         return data, label
     
     def process_preds(self, preds, task_name=None):
-        r'''The processing of prediction for each task. 
+        r'''对每个任务的预测进行处理。
 
-        - The default is no processing. If necessary, you can rewrite this function. 
-        - If ``multi_input`` is ``True``, ``task_name`` is valid and ``preds`` with type :class:`torch.Tensor` is the prediction of this task.
-        - otherwise, ``task_name`` is invalid and ``preds`` is a :class:`dict` of name-prediction pairs of all tasks.
+        - 默认不进行任何处理。如有需要，可以重写此函数。
+        - 如果 ``multi_input`` 为 ``True``，``task_name`` 有效，且类型为 :class:`torch.Tensor` 的 ``preds`` 是该任务的预测结果。
+        - 否则，``task_name`` 无效，且 ``preds`` 是所有任务的名称-预测对组成的 :class:`dict`。
 
         Args:
-            preds (dict or torch.Tensor): The prediction of ``task_name`` or all tasks.
-            task_name (str): The string of task name.
+            preds (dict or torch.Tensor): ``task_name`` 或所有任务的预测结果。
+            task_name (str): 任务名称字符串。
         '''
         return preds
 
@@ -193,18 +192,17 @@ class Trainer(nn.Module):
 
     def train(self, train_dataloaders, test_dataloaders, epochs, 
               val_dataloaders=None, return_weight=False):
-        r'''The training process of multi-task learning.
+        r'''多任务学习的训练过程。
 
         Args:
-            train_dataloaders (dict or torch.utils.data.DataLoader): The dataloaders used for training. \
-                            If ``multi_input`` is ``True``, it is a dictionary of name-dataloader pairs. \
-                            Otherwise, it is a single dataloader which returns data and a dictionary \
-                            of name-label pairs in each iteration.
+            train_dataloaders (dict or torch.utils.data.DataLoader): 用于训练的数据加载器。\
+                            如果 ``multi_input`` 为 ``True``，它是一个名称-数据加载器对的字典。\
+                            否则，它是一个单一的数据加载器，每次迭代返回数据和一个名称-标签对的字典。
 
-            test_dataloaders (dict or torch.utils.data.DataLoader): The dataloaders used for the validation or testing. \
-                            The same structure with ``train_dataloaders``.
-            epochs (int): The total training epochs.
-            return_weight (bool): if ``True``, the loss weights will be returned.
+            test_dataloaders (dict or torch.utils.data.DataLoader): 用于验证或测试的数据加载器。\
+                            结构与 ``train_dataloaders`` 相同。
+            epochs (int): 总的训练轮数。
+            return_weight (bool): 如果为 ``True``，将返回损失权重。
         '''
         print(os.path.join(self.save_path, f'best_{self.modelName}.pt'))
         train_loader, train_batch = self._prepare_dataloaders(train_dataloaders)
@@ -276,13 +274,13 @@ class Trainer(nn.Module):
 
 
     def test(self, test_dataloaders, test_loss_buffer=None, epoch=None, mode='test', return_improvement=False):
-        r'''The test process of multi-task learning.
+        r'''多任务学习的测试过程。
 
         Args:
-            test_dataloaders (dict or torch.utils.data.DataLoader): If ``multi_input`` is ``True``, \
-                            it is a dictionary of name-dataloader pairs. Otherwise, it is a single \
-                            dataloader which returns data and a dictionary of name-label pairs in each iteration.
-            epoch (int, default=None): The current epoch. 
+            test_dataloaders (dict or torch.utils.data.DataLoader): 如果 ``multi_input`` 为 ``True``，\
+                            它是一个名称-数据加载器对的字典。否则，它是一个单一的数据加载器，\
+                            每次迭代返回数据和一个名称-标签对的字典。
+            epoch (int, default=None): 当前轮数。
         '''
         test_loader, test_batch = self._prepare_dataloaders(test_dataloaders)
         
@@ -318,7 +316,7 @@ class Trainer(nn.Module):
         
 
     def test_visiual(self, test_dataloaders, epoch=None, mode='test'):
-        r'''For visualization and evaluation of multi-task learning.
+        r'''用于多任务学习的可视化和评估。
         '''
         test_loader, test_batch = self._prepare_dataloaders(test_dataloaders)
         Inputs = []

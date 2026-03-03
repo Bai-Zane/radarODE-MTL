@@ -10,7 +10,7 @@ from torchinfo import summary
 
 class PositionEmbeddingLearned(nn.Module):
     """
-    Absolute pos embedding, learned.
+    绝对位置嵌入，可学习参数。
     """
     def __init__(self, dim):
         super().__init__()
@@ -77,7 +77,7 @@ class LSTMCNNEncoder(nn.Module):
     def __init__(self, dim):
         super().__init__()
 
-        # self.lstm1 = nn.LSTM(31, dim // 4, num_layers=1, batch_first=True, bidirectional=True)
+        # self.lstm1 = nn.LSTM(31, dim // 4, num_layers=1, batch_first=True, bidirectional=True)  # LSTM层（已注释）
         self.deconv = nn.Sequential(
             DeconvBlock(dim, dim // 2, kernel_size=5, stride=3, padding=0),
             DeconvBlock(dim // 2, dim // 4, kernel_size=5, stride=3, padding=0),
@@ -85,8 +85,8 @@ class LSTMCNNEncoder(nn.Module):
         )
 
     def forward(self, x):
-        # x, _ = self.lstm1(x)
-        # x = x.unsqueeze(1)
+        # x, _ = self.lstm1(x)  # LSTM前向传播（已注释）
+        # x = x.unsqueeze(1)   # 增加维度（已注释）
         x = self.deconv(x)
 
         return x
@@ -95,11 +95,11 @@ class LSTMCNNEncoder(nn.Module):
 
 if __name__ == '__main__':
     model = LSTMCNNEncoder(1024)
-    # Print the model summary to check the output dimensions
+    # 打印模型摘要以检查输出维度
     print(model)
 
-    # Test the model with a random input
-    input_tensor = torch.randn(2, 1024, 31)  # Example input tensor
+    # 使用随机输入测试模型
+    input_tensor = torch.randn(2, 1024, 31)  # 示例输入张量
     output = model(input_tensor)
-    print("Output shape:", output.shape)  # Expected shape: (2, 128, 863)
+    print("Output shape:", output.shape)  # 期望形状: (2, 128, 863)
     print(summary(model, input_size=(2, 1024, 31), device='cpu'))

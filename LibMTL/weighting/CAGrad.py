@@ -8,17 +8,17 @@ from LibMTL.weighting.abstract_weighting import AbsWeighting
 from scipy.optimize import minimize
 
 class CAGrad(AbsWeighting):
-    r"""Conflict-Averse Gradient descent (CAGrad).
-    
-    This method is proposed in `Conflict-Averse Gradient Descent for Multi-task learning (NeurIPS 2021) <https://openreview.net/forum?id=_61Qh8tULj_>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/Cranial-XIX/CAGrad>`_. 
+    r"""Conflict-Averse Gradient descent (CAGrad，冲突规避梯度下降).
+
+    该方法在 `Conflict-Averse Gradient Descent for Multi-task learning (NeurIPS 2021) <https://openreview.net/forum?id=_61Qh8tULj_>`_ 中提出，
+    并基于 `官方 PyTorch 实现 <https://github.com/Cranial-XIX/CAGrad>`_ 修改实现。
 
     Args:
-        calpha (float, default=0.5): A hyperparameter that controls the convergence rate.
-        rescale ({0, 1, 2}, default=1): The type of the gradient rescaling.
+        calpha (float, default=0.5): 控制收敛率的超参数。
+        rescale ({0, 1, 2}, default=1): 梯度重缩放的类型。
 
     .. warning::
-            CAGrad is not supported by representation gradients, i.e., ``rep_grad`` must be ``False``.
+            CAGrad 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
 
     """
     def __init__(self):

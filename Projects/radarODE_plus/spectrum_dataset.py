@@ -34,25 +34,27 @@ def get_all_files_in_directory(directory):
     return file_paths
 
 # add gaussian noise with certqin SNR to sst
+# 向sst添加指定SNR的高斯噪声
 def add_gaussian_sst(sst, snr_db):
     for i in range(sst.shape[0]):
         # 计算信号功率
         signal_power = np.mean(sst[i] ** 2)
-        
+
         # 计算噪声功率
         snr_linear = 10 ** (snr_db / 10)
         noise_power = signal_power / snr_linear
-        
+
         # 生成高斯噪声
         noise = np.sqrt(noise_power) * np.random.randn(*sst[i].shape)
         sst[i] = sst[i] + noise
     return sst
 
 # add abrupt noise with certqin length to sst
-def add_abrupt_sst(sst, length = 1): # length 1 sec (length - 100)
-    snr_db = -9 # extensive noise
+# 向sst添加指定长度的突发噪声
+def add_abrupt_sst(sst, length = 1): # 长度1秒 (length - 100)
+    snr_db = -9 # 严重噪声
     if length>10:
-        snr_db = 0 # mild noise
+        snr_db = 0 # 轻微噪声
         length -= 10
     length = int(length * 30)
     length = sst.shape[-1]-1 if length > sst.shape[-1] else length
@@ -69,6 +71,7 @@ def add_abrupt_sst(sst, length = 1): # length 1 sec (length - 100)
         sst[i][:,start:start+length] = sst[i][:,start:start+length] + noise
     return sst
 
+# 对ECG信号进行降采样
 def down_sample(ecg, target_len=200):
     ecg = np.interp(np.linspace(0, len(ecg), target_len),
                     np.arange(len(ecg)), ecg)
@@ -89,7 +92,7 @@ class SpectrumECGDataset(Dataset):
         self.aug_snr = aug_snr
         self.all_sst_ecg_files = get_all_files_in_directory(self.sst_ecg_root)
         self.index_select = np.random.choice(
-                np.arange(len(self.all_sst_ecg_files)), size = int(20/100*len(self.all_sst_ecg_files)), replace=False) # used for abrupt nosing (20%)
+                np.arange(len(self.all_sst_ecg_files)), size = int(20/100*len(self.all_sst_ecg_files)), replace=False) # 用于突发噪声（20%）
     def __len__(self):
         return len(self.all_sst_ecg_files)
 
@@ -99,14 +102,14 @@ class SpectrumECGDataset(Dataset):
         sst_data, ecg_data, anchor_data = np.load(sst_ecg_path[0]), np.load(
             sst_ecg_path[1]), np.load(sst_ecg_path[2])
         target_len = 260
-        # pad ecg_data to target length with -100
+        # 将ecg_data填充到目标长度，使用-10作为填充值
         ppi_info = np.pad(ecg_data, (0, target_len -
                           ecg_data.shape[-1]), 'constant', constant_values=-10)
 
         ecg_data = np.expand_dims(down_sample(ecg_data), 0)
         ppi_info = np.expand_dims(((ppi_info)), 0)
         anchor_data = np.expand_dims((anchor_data), 0)
-        # sst is the normlized sst data, ppi_info is the original ecg signal with -10 padding to length of 260, ecg_data is the resampled ecg data with length of 200, anchor_data represent the position of the R peak in the ecg signal
+        # sst是归一化的sst数据，ppi_info是原始ecg信号，用-10填充到长度260，ecg_data是重采样后的ecg数据，长度为200，anchor_data表示ecg信号中R峰的位置
 
         if self.aug_snr < 100:
             sst_data = add_gaussian_sst(sst_data, self.aug_snr)

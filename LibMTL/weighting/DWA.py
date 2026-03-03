@@ -6,13 +6,13 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class DWA(AbsWeighting):
-    r"""Dynamic Weight Average (DWA).
-    
-    This method is proposed in `End-To-End Multi-Task Learning With Attention (CVPR 2019) <https://openaccess.thecvf.com/content_CVPR_2019/papers/Liu_End-To-End_Multi-Task_Learning_With_Attention_CVPR_2019_paper.pdf>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/lorenmt/mtan>`_. 
+    r"""Dynamic Weight Average (DWA，动态权重平均).
+
+    该方法在 `End-To-End Multi-Task Learning With Attention (CVPR 2019) <https://openaccess.thecvf.com/content_CVPR_2019/papers/Liu_End-To-End_Multi-Task_Learning_With_Attention_CVPR_2019_paper.pdf>`_ 中提出，
+    并基于 `官方 PyTorch 实现 <https://github.com/lorenmt/mtan>`_ 修改实现。
 
     Args:
-        T (float, default=2.0): The softmax temperature.
+        T (float, default=2.0): Softmax 温度。
 
     """
     def __init__(self):

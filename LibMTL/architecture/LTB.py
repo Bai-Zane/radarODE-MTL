@@ -42,14 +42,14 @@ class _transform_resnet_ltb(nn.Module):
         return ss_rep[4]
 
 class LTB(AbsArchitecture):
-    r"""Learning To Branch (LTB).
+    r"""学习分支 (Learning To Branch, LTB)。
 
-    This method is proposed in `Learning to Branch for Multi-Task Learning (ICML 2020) <http://proceedings.mlr.press/v119/guo20e.html>`_ \
-    and implemented by us. 
+    该方法在 `Learning to Branch for Multi-Task Learning (ICML 2020) <http://proceedings.mlr.press/v119/guo20e.html>`_ 中提出，
+    并由我们实现。
 
     .. warning::
-            - :class:`LTB` does not work with multi-input problems, i.e., ``multi_input`` must be ``False``.
-            - :class:`LTB` is only supported by ResNet-based encoders.
+            - :class:`LTB` 不适用于多输入问题，即 ``multi_input`` 必须为 ``False``。
+            - :class:`LTB` 仅支持基于 ResNet 的编码器。
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):
         super(LTB, self).__init__(task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs)
@@ -62,12 +62,12 @@ class LTB(AbsArchitecture):
 
     def forward(self, inputs, task_name=None):
         r"""
-        Args: 
-            inputs (torch.Tensor): The input data.
-            task_name (str, default=None): The task name corresponding to ``inputs`` if ``multi_input`` is ``True``.
-        
+        Args:
+            inputs (torch.Tensor): 输入数据。
+            task_name (str, default=None): 如果 ``multi_input`` 为 ``True``，对应 ``inputs`` 的任务名称。
+
         Returns:
-            dict: A dictionary of name-prediction pairs of type (:class:`str`, :class:`torch.Tensor`).
+            dict: 名称-预测对的字典，类型为 (:class:`str`, :class:`torch.Tensor`)。
         """
         out = {}
         s_rep = self.encoder(inputs, self.epoch, self.epochs)

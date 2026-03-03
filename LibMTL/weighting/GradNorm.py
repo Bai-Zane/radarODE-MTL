@@ -6,13 +6,13 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class GradNorm(AbsWeighting):
-    r"""Gradient Normalization (GradNorm).
-    
-    This method is proposed in `GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks (ICML 2018) <http://proceedings.mlr.press/v80/chen18a/chen18a.pdf>`_ \
-    and implemented by us.
+    r"""Gradient Normalization (GradNorm，梯度归一化).
+
+    该方法在 `GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks (ICML 2018) <http://proceedings.mlr.press/v80/chen18a/chen18a.pdf>`_ 中提出，
+    并由我们实现。
 
     Args:
-        alpha (float, default=1.5): The strength of the restoring force which pulls tasks back to a common training rate.
+        alpha (float, default=1.5): 将任务拉回共同训练速率的恢复力的强度。
 
     """
     def __init__(self):

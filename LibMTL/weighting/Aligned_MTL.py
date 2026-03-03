@@ -7,9 +7,9 @@ from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class Aligned_MTL(AbsWeighting):
     r"""Aligned-MTL.
-    
-    This method is proposed in `Independent Component Alignment for Multi-Task Learning (CVPR 2023) <https://openaccess.thecvf.com/content/CVPR2023/html/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.html>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/SamsungLabs/MTL>`_. 
+
+    该方法在 `Independent Component Alignment for Multi-Task Learning (CVPR 2023) <https://openaccess.thecvf.com/content/CVPR2023/html/Senushkin_Independent_Component_Alignment_for_Multi-Task_Learning_CVPR_2023_paper.html>`_ 中提出，
+    并基于 `官方 PyTorch 实现 <https://github.com/SamsungLabs/MTL>`_ 修改实现。
 
     """
     def __init__(self):

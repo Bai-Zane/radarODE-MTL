@@ -7,19 +7,19 @@ from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class MoCo(AbsWeighting):
     r"""MoCo.
-    
-    This method is proposed in `Mitigating Gradient Bias in Multi-objective Learning: A Provably Convergent Approach (ICLR 2023) <https://openreview.net/forum?id=dLAYGdKTi2>`_ \
-    and implemented based on the author' sharing code (Heshan Fernando: fernah@rpi.edu). 
+
+    该方法在 `Mitigating Gradient Bias in Multi-objective Learning: A Provably Convergent Approach (ICLR 2023) <https://openreview.net/forum?id=dLAYGdKTi2>`_ 中提出，
+    并基于作者共享的代码实现 (Heshan Fernando: fernah@rpi.edu)。
 
     Args:
-        MoCo_beta (float, default=0.5): The learning rate of y.
-        MoCo_beta_sigma (float, default=0.5): The decay rate of MoCo_beta.
-        MoCo_gamma (float, default=0.1): The learning rate of lambd.
-        MoCo_gamma_sigma (float, default=0.5): The decay rate of MoCo_gamma.
-        MoCo_rho (float, default=0): The \ell_2 regularization parameter of lambda's update.
+        MoCo_beta (float, default=0.5): y 的学习率。
+        MoCo_beta_sigma (float, default=0.5): MoCo_beta 的衰减率。
+        MoCo_gamma (float, default=0.1): lambd 的学习率。
+        MoCo_gamma_sigma (float, default=0.5): MoCo_gamma 的衰减率。
+        MoCo_rho (float, default=0): lambda 更新的 \ell_2 正则化参数。
 
     .. warning::
-            MoCo is not supported by representation gradients, i.e., ``rep_grad`` must be ``False``.
+            MoCo 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
 
     """
     def __init__(self):

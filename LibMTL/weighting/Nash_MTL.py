@@ -14,18 +14,18 @@ except ModuleNotFoundError:
 
 class Nash_MTL(AbsWeighting):
     r"""Nash-MTL.
-    
-    This method is proposed in `Multi-Task Learning as a Bargaining Game (ICML 2022) <https://proceedings.mlr.press/v162/navon22a/navon22a.pdf>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/AvivNavon/nash-mtl>`_. 
+
+    该方法在 `Multi-Task Learning as a Bargaining Game (ICML 2022) <https://proceedings.mlr.press/v162/navon22a/navon22a.pdf>`_ 中提出，
+    并基于 `官方 PyTorch 实现 <https://github.com/AvivNavon/nash-mtl>`_ 修改实现。
 
     Args:
-        update_weights_every (int, default=1): Period of weights update.
-        optim_niter (int, default=20): The max iteration of optimization solver.
-        max_norm (float, default=1.0): The max norm of the gradients.
+        update_weights_every (int, default=1): 权重更新周期。
+        optim_niter (int, default=20): 优化求解器的最大迭代次数。
+        max_norm (float, default=1.0): 梯度的最大范数。
 
 
     .. warning::
-            Nash_MTL is not supported by representation gradients, i.e., ``rep_grad`` must be ``False``.
+            Nash_MTL 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
 
     """
     def __init__(self):

@@ -5,9 +5,14 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class EGA(AbsWeighting):
-    r"""Eccentric Gradient Alignment.
-        Args:
-        EGA_temp (float, default=1.0): The softmax temperature, large value means equal weight.
+    r"""Eccentric Gradient Alignment (EGA，偏心梯度对齐).
+
+    Args:
+        EGA_temp (float, default=1.0): Softmax 温度，值越大表示权重越相等。
+
+    .. warning::
+            EGA 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
+
     """
     def __init__(self):
         super(EGA, self).__init__()

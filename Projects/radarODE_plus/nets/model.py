@@ -45,7 +45,7 @@ class shapeDecoder(nn.Module):
         return ecg_shape
 
 # !!!!!
-# Only for illustration purposes, not used anywhere in the code 
+# 仅用于说明，代码中未使用
 # !!!!!
 class radarODE_MTL(nn.Module):
     def __init__(self, in_channels=50, model_type='v1'):
@@ -76,11 +76,11 @@ class radarODE_MTL(nn.Module):
     def forward(self, x, tgt=None):
         img_feature = self.backbone(x)
         img_feature = self.squeeze_module(img_feature)
-        # ppi estimation
+        # ppi估计
         ppi = self.PPI_decoder(img_feature)
-        # anchor estimation
+        # anchor估计
         anchor = self.anchor_decoder(img_feature)
-        # ecg reconstruction
+        # ecg重建
         series_feature = self.encoder(img_feature)
         ecg_shape = self.decoder(series_feature)
         

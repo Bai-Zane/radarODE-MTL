@@ -6,16 +6,16 @@ import numpy as np
 from LibMTL.architecture.MMoE import MMoE
 
 class DSelect_k(MMoE):
-    r"""DSelect-k.
-    
-    This method is proposed in `DSelect-k: Differentiable Selection in the Mixture of Experts with Applications to Multi-Task Learning (NeurIPS 2021) <https://proceedings.neurips.cc/paper/2021/hash/f5ac21cd0ef1b88e9848571aeb53551a-Abstract.html>`_ \
-    and implemented by modifying from the `official TensorFlow implementation <https://github.com/google-research/google-research/tree/master/dselect_k_moe>`_. 
+    r"""DSelect-k。
+
+    该方法在 `DSelect-k: Differentiable Selection in the Mixture of Experts with Applications to Multi-Task Learning (NeurIPS 2021) <https://proceedings.neurips.cc/paper/2021/hash/f5ac21cd0ef1b88e9848571aeb53551a-Abstract.html>`_ 中提出，
+    并通过修改 `官方 TensorFlow 实现 <https://github.com/google-research/google-research/tree/master/dselect_k_moe>`_ 来实现。
 
     Args:
-        img_size (list): The size of input data. For example, [3, 244, 244] denotes input images with size 3x224x224.
-        num_experts (int): The number of experts shared by all the tasks. Each expert is an encoder network.
-        num_nonzeros (int): The number of selected experts.
-        kgamma (float, default=1.0): A scaling parameter for the smooth-step function.
+        img_size (list): 输入数据的尺寸。例如，[3, 244, 244] 表示输入图像的尺寸为 3x224x224。
+        num_experts (int): 所有任务共享的专家数量。每个专家是一个编码器网络。
+        num_nonzeros (int): 被选中的专家数量。
+        kgamma (float, default=1.0): 平滑步长函数的缩放参数。
 
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):

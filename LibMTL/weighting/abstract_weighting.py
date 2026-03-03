@@ -5,13 +5,13 @@ import numpy as np
 
 
 class AbsWeighting(nn.Module):
-    r"""An abstract class for weighting strategies.
+    r"""权重策略的抽象类。
     """
     def __init__(self):
         super(AbsWeighting, self).__init__()
-        
+
     def init_param(self):
-        r"""Define and initialize some trainable parameters required by specific weighting methods. 
+        r"""定义并初始化特定权重方法所需的一些可训练参数。
         """
         pass
 
@@ -67,17 +67,17 @@ class AbsWeighting(nn.Module):
                 end = sum(self.grad_index[:(count+1)])
                 param.grad.data = new_grads[beg:end].contiguous().view(param.data.size()).data.clone()
             count += 1
-            
+
     def _get_grads(self, losses, mode='backward'):
-        r"""This function is used to return the gradients of representations or shared parameters.
+        r"""此函数用于返回表示或共享参数的梯度。
 
-        If ``rep_grad`` is ``True``, it returns a list with two elements. The first element is \
-        the gradients of the representations with the size of [task_num, batch_size, rep_size]. \
-        The second element is the resized gradients with size of [task_num, -1], which means \
-        the gradient of each task is resized as a vector.
+        如果 ``rep_grad`` 为 ``True``，它返回一个包含两个元素的列表。第一个元素是 \
+        表示的梯度，大小为 [task_num, batch_size, rep_size]。 \
+        第二个元素是调整大小后的梯度，大小为 [task_num, -1]，这意味着 \
+        每个任务的梯度被调整为一个向量。
 
-        If ``rep_grad`` is ``False``, it returns the gradients of the shared parameters with size \
-        of [task_num, -1], which means the gradient of each task is resized as a vector.
+        如果 ``rep_grad`` 为 ``False``，它返回共享参数的梯度，大小 \
+        为 [task_num, -1]，这意味着每个任务的梯度被调整为一个向量。
         """
         if self.rep_grad:
             per_grads = self._compute_grad(losses, mode, rep_grad=True)
@@ -93,14 +93,14 @@ class AbsWeighting(nn.Module):
             self._compute_grad_dim()
             grads = self._compute_grad(losses, mode)
             return grads
-        
+
     def _backward_new_grads(self, batch_weight, per_grads=None, grads=None):
-        r"""This function is used to reset the gradients and make a backward.
+        r"""此函数用于重置梯度并执行反向传播。
 
         Args:
-            batch_weight (torch.Tensor): A tensor with size of [task_num].
-            per_grad (torch.Tensor): It is needed if ``rep_grad`` is True. The gradients of the representations.
-            grads (torch.Tensor): It is needed if ``rep_grad`` is False. The gradients of the shared parameters. 
+            batch_weight (torch.Tensor): 大小为 [task_num] 的张量。
+            per_grad (torch.Tensor): 如果 ``rep_grad`` 为 True，则需要此项。表示的梯度。
+            grads (torch.Tensor): 如果 ``rep_grad`` 为 False，则需要此项。共享参数的梯度。
         """
         if self.rep_grad:
             if not isinstance(self.rep, dict):
@@ -116,12 +116,12 @@ class AbsWeighting(nn.Module):
             # test = ([batch_weight[i] * grads[i] for i in range(self.task_num)])
             new_grads = sum([batch_weight[i] * grads[i] for i in range(self.task_num)])
             self._reset_grad(new_grads)
-    
+
     @property
     def backward(self, losses, **kwargs):
         r"""
         Args:
-            losses (list): A list of losses of each task.
-            kwargs (dict): A dictionary of hyperparameters of weighting methods.
+            losses (list): 每个任务损失的列表。
+            kwargs (dict): 权重方法的超参数字典。
         """
         pass

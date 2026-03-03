@@ -27,7 +27,7 @@ class conv2DBlock(nn.Module):
         x = self.batch_norm(x)
         x = self.relu(x)
         return x
-    
+
 class convTransBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding, output_padding):
         super(convTransBlock, self).__init__()
@@ -62,7 +62,7 @@ class ConvBlock(nn.Module):
 class CNNLSTMDecoder(nn.Module):
     def __init__(self):
         super().__init__()
-        # self.ode_solver =  ode1_solver()
+        # self.ode_solver =  ode1_solver()  # ODE求解器（已注释）
         self.param_estimator=ECGParameterEstimator()
         self.conv = nn.Sequential(
             ConvBlock(128, 64, kernel_size=7, stride=2, padding=1),
@@ -77,15 +77,15 @@ class CNNLSTMDecoder(nn.Module):
             nn.Conv1d(4, 2, kernel_size=5, stride=1, padding=1),
             nn.Conv1d(2, 1, kernel_size=2, stride=1, padding=0),
         )
-        # fused feature Encoder layers
+        # 融合特征编码器层
         self.fusion_encoder = nn.Sequential(
             conv2DBlock(1, 16, kernel_size=5, stride=(2,2), padding=(1,1)),
             conv2DBlock(16, 32, 3, stride=(1,2), padding=(1,1)),
             conv2DBlock(32, 64, 3, stride=(1,2), padding=(1,1)),
             conv2DBlock(64, 64, 1, stride=(2,1), padding=(0,0)),
         )
-        
-        # Decoder layers
+
+        # 解码器层
         self.fusion_decoder = nn.Sequential(
             convTransBlock(64, 32, 5, stride=(2,2), padding=(1,1), output_padding=1),
             convTransBlock(32, 16, 5, stride=(2,2), padding=1, output_padding=1),
@@ -100,7 +100,7 @@ class CNNLSTMDecoder(nn.Module):
             nn.Conv1d(2, 1, kernel_size=4, stride=1, padding=0),
             nn.Conv1d(1, 1, kernel_size=1, stride=1, padding=0),
         )
-        # for test only
+        # 仅用于测试
         # self.fusion_encoder_test = nn.Sequential(
         #     ConvBlock(1, 8, kernel_size=5, stride=2, padding=1),
         #     ConvBlock(8, 16, 3, stride=2, padding=1),
@@ -126,7 +126,7 @@ class CNNLSTMDecoder(nn.Module):
                 m.bias.data.zeros_()
 
     def forward(self, x):
-        # temp+ode, give the best result but time consuming due to the ode solver
+        # temp+ode, 给出最佳结果但由于ODE求解器而耗时
         # x = self.conv(x)
         # x_temproal = self.out_conv(x)
         # x_temproal =  x_temproal.squeeze(1)
@@ -138,13 +138,13 @@ class CNNLSTMDecoder(nn.Module):
         # x_final = self.fusion_decoder(x_fusion).squeeze(1)
         # x_final = self.out_conv_final(x_final)
         # return x_final
-    
-        # ### temp only, faster but not as good as temp+ode
+
+        # ### 仅使用temp, 更快但不如temp+ode效果好
         x = self.conv(x)
         x_temproal = self.out_conv(x)
         return x_temproal
-    
-        # ### ode only, for ablation study only
+
+        # ### 仅使用ode, 仅用于消融实验
         # x = self.conv(x)
         # param = self.param_estimator(x)
         # x_ode = ode1_solver(scale_output(param))

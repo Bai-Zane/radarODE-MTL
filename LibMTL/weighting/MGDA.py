@@ -7,13 +7,13 @@ from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 
 class MGDA(AbsWeighting):
-    r"""Multiple Gradient Descent Algorithm (MGDA).
-    
-    This method is proposed in `Multi-Task Learning as Multi-Objective Optimization (NeurIPS 2018) <https://papers.nips.cc/paper/2018/hash/432aca3a1e345e339f35a30c8f65edce-Abstract.html>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/isl-org/MultiObjectiveOptimization>`_. 
+    r"""Multiple Gradient Descent Algorithm (MGDA，多梯度下降算法).
+
+    该方法在 `Multi-Task Learning as Multi-Objective Optimization (NeurIPS 2018) <https://papers.nips.cc/paper/2018/hash/432aca3a1e345e339f35a30c8f65edce-Abstract.html>`_ 中提出，
+    并基于 `官方 PyTorch 实现 <https://github.com/isl-org/MultiObjectiveOptimization>`_ 修改实现。
 
     Args:
-        mgda_gn ({'none', 'l2', 'loss', 'loss+'}, default='none'): The type of gradient normalization.
+        mgda_gn ({'none', 'l2', 'loss', 'loss+'}, default='none'): 梯度归一化的类型。
 
     """
     def __init__(self):

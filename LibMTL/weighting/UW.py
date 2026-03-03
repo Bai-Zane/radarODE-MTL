@@ -6,10 +6,10 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class UW(AbsWeighting):
-    r"""Uncertainty Weights (UW).
-    
-    This method is proposed in `Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics (CVPR 2018) <https://openaccess.thecvf.com/content_cvpr_2018/papers/Kendall_Multi-Task_Learning_Using_CVPR_2018_paper.pdf>`_ \
-    and implemented by us. 
+    r"""Uncertainty Weights (UW，不确定性权重).
+
+    该方法在 `Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics (CVPR 2018) <https://openaccess.thecvf.com/content_cvpr_2018/papers/Kendall_Multi-Task_Learning_Using_CVPR_2018_paper.pdf>`_ 中提出，
+    并由我们实现。
 
     """
     def __init__(self):

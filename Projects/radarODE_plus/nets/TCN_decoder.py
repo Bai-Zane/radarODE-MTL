@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.nn.utils import weight_norm
 import math
 
-# used for MMECG and radarODE
+# 用于MMECG和radarODE
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
@@ -122,8 +122,8 @@ class TemporalConvNet(nn.Module):
 
     def forward(self, x):
         """
-        :param x: size of (Batch, input_channel, seq_len)
-        :return: size of (Batch, output_channel, seq_len)
+        :param x: 大小为 (Batch, input_channel, seq_len)
+        :return: 大小为 (Batch, output_channel, seq_len)
         """
         output = self.conv(x)
         output = self.network(output)

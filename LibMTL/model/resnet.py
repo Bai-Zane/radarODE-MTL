@@ -25,13 +25,13 @@ model_urls = {
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
-    """3x3 convolution with padding"""
+    """带填充的3x3卷积"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=dilation, groups=groups, bias=False, dilation=dilation)
 
 
 def conv1x1(in_planes, out_planes, stride=1):
-    """1x1 convolution"""
+    """1x1卷积"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
@@ -48,7 +48,7 @@ class BasicBlock(nn.Module):
             raise ValueError('BasicBlock only supports groups=1 and base_width=64')
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
-        # Both self.conv1 and self.downsample layers downsample the input when stride != 1
+        # 当 stride != 1 时，self.conv1 和 self.downsample 层都会对输入进行下采样
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = norm_layer(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -86,7 +86,7 @@ class Bottleneck(nn.Module):
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         width = int(planes * (base_width / 64.)) * groups
-        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
+        # 当 stride != 1 时，self.conv2 和 self.downsample 层都会对输入进行下采样
         self.conv1 = conv1x1(inplanes, width)
         self.bn1 = norm_layer(width)
         self.conv2 = conv3x3(width, width, stride, groups, dilation)
@@ -162,9 +162,9 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-        # Zero-initialize the last BN in each residual branch,
-        # so that the residual branch starts with zeros, and each residual block behaves like an identity.
-        # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
+        # 将每个残差分支中的最后一个 BN 层初始化为零，
+        # 使得残差分支从零开始，每个残差块表现得像恒等映射。
+        # 根据 https://arxiv.org/abs/1706.02677，这可以将模型性能提高 0.2~0.3%
         if zero_init_residual:
             for m in self.modules():
                 if isinstance(m, Bottleneck):
@@ -207,7 +207,7 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        # We remove the original classifier, to attach task-specific decoders.
+        # 我们移除了原始的分类器，以便附加任务特定的解码器。
         #x = self.avgpool(x)
         #x = torch.flatten(x, 1)
         #x = self.fc(x)

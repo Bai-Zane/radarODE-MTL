@@ -92,13 +92,13 @@ class _transform_resnet_MTAN(nn.Module):
 
     
 class MTAN(AbsArchitecture):
-    r"""Multi-Task Attention Network (MTAN).
-    
-    This method is proposed in `End-To-End Multi-Task Learning With Attention (CVPR 2019) <https://openaccess.thecvf.com/content_CVPR_2019/papers/Liu_End-To-End_Multi-Task_Learning_With_Attention_CVPR_2019_paper.pdf>`_ \
-    and implemented by modifying from the `official PyTorch implementation <https://github.com/lorenmt/mtan>`_. 
+    r"""多任务注意力网络 (Multi-Task Attention Network, MTAN)。
+
+    该方法在 `End-To-End Multi-Task Learning With Attention (CVPR 2019) <https://openaccess.thecvf.com/content_CVPR_2019/papers/Liu_End-To-End_Multi-Task_Learning_With_Attention_CVPR_2019_paper.pdf>`_ 中提出，
+    并通过修改 `官方 PyTorch 实现 <https://github.com/lorenmt/mtan>`_ 来实现。
 
     .. warning::
-            :class:`MTAN` is only supported by ResNet-based encoders.
+            :class:`MTAN` 仅支持基于 ResNet 的编码器。
 
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):

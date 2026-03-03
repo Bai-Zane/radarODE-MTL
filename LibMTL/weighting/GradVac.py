@@ -7,17 +7,17 @@ from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 
 class GradVac(AbsWeighting):
-    r"""Gradient Vaccine (GradVac).
-    
-    This method is proposed in `Gradient Vaccine: Investigating and Improving Multi-task Optimization in Massively Multilingual Models (ICLR 2021 Spotlight) <https://openreview.net/forum?id=F1vEjWK-lH_>`_ \
-    and implemented by us.
+    r"""Gradient Vaccine (GradVac，梯度疫苗).
+
+    该方法在 `Gradient Vaccine: Investigating and Improving Multi-task Optimization in Massively Multilingual Models (ICLR 2021 Spotlight) <https://openreview.net/forum?id=F1vEjWK-lH_>`_ 中提出，
+    并由我们实现。
 
     Args:
-        GradVac_beta (float, default=0.5): The exponential moving average (EMA) decay parameter.
-        GradVac_group_type (int, default=0): The parameter granularity (0: whole_model; 1: all_layer; 2: all_matrix).
+        GradVac_beta (float, default=0.5): 指数移动平均 (EMA) 衰减参数。
+        GradVac_group_type (int, default=0): 参数粒度 (0: whole_model; 1: all_layer; 2: all_matrix)。
 
     .. warning::
-            GradVac is not supported by representation gradients, i.e., ``rep_grad`` must be ``False``.
+            GradVac 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
 
     """
     def __init__(self):

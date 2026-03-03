@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 def shuffle_chnls(x, groups=2):
-    """Channel Shuffle"""
+    """通道洗牌"""
 
     bs, chnls, h, w = x.data.size()
     if chnls % groups:
@@ -18,7 +18,7 @@ def shuffle_chnls(x, groups=2):
 
 class BN_Conv2d(nn.Module):
     """
-    BN_CONV, default activation is ReLU
+    BN_CONV, 默认激活函数为ReLU
     """
 
     def __init__(self, in_channels: object, out_channels: object, kernel_size: object, stride: object, padding: object,
@@ -36,12 +36,12 @@ class BN_Conv2d(nn.Module):
 
 
 class DSampling(nn.Module):
-    """Spatial down sampling of SuffleNet-v2"""
+    """SuffleNet-v2的空间下采样"""
 
     def __init__(self, in_chnls, groups=2):
         super(DSampling, self).__init__()
         self.groups = groups
-        self.dwconv_l1 = BN_Conv2d(in_chnls, in_chnls, (3, 5), (2, 4), 1,  # down-sampling, depth-wise conv.
+        self.dwconv_l1 = BN_Conv2d(in_chnls, in_chnls, (3, 5), (2, 4), 1,  # 下采样，深度可分离卷积
                                    groups=in_chnls, activation=None)
         self.conv_l2 = BN_Conv2d(in_chnls, in_chnls, 1, 1, 0)
         self.conv_r1 = BN_Conv2d(in_chnls, in_chnls, 1, 1, 0)
@@ -49,22 +49,22 @@ class DSampling(nn.Module):
         self.conv_r3 = BN_Conv2d(in_chnls, in_chnls, 1, 1, 0)
 
     def forward(self, x):
-        # left path
+        # 左路径
         out_l = self.dwconv_l1(x)
         out_l = self.conv_l2(out_l)
 
-        # right path
+        # 右路径
         out_r = self.conv_r1(x)
         out_r = self.dwconv_r2(out_r)
         out_r = self.conv_r3(out_r)
 
-        # concatenate
+        # 拼接
         out = torch.cat((out_l, out_r), 1)
         return shuffle_chnls(out, self.groups)
 
 
 class BasicUnit(nn.Module):
-    """Basic Unit of ShuffleNet-v2"""
+    """ShuffleNet-v2的基本单元"""
 
     def __init__(self, in_chnls, out_chnls, is_se=False, is_residual=False, c_ratio=0.5, groups=2):
         super(BasicUnit, self).__init__()
@@ -74,9 +74,9 @@ class BasicUnit(nn.Module):
         self.ro_chnls = out_chnls - self.l_chnls
         self.groups = groups
 
-        # layers
+        # 层
         self.conv1 = BN_Conv2d(self.r_chnls, self.ro_chnls, 1, 1, 0)
-        self.dwconv2 = BN_Conv2d(self.ro_chnls, self.ro_chnls, 3, 1, 1,  # same padding, depthwise conv
+        self.dwconv2 = BN_Conv2d(self.ro_chnls, self.ro_chnls, 3, 1, 1,  # 相同填充，深度可分离卷积
                                  groups=self.ro_chnls, activation=None)
         act = False if self.is_res else True
         self.conv3 = BN_Conv2d(self.ro_chnls, self.ro_chnls, 1, 1, 0, activation=act)
@@ -91,7 +91,7 @@ class BasicUnit(nn.Module):
         x_l = x[:, :self.l_chnls, :, :]
         x_r = x[:, self.l_chnls:, :, :]
 
-        # right path
+        # 右路径
         out_r = self.conv1(x_r)
         out_r = self.dwconv2(out_r)
         out_r = self.conv3(out_r)
@@ -101,7 +101,7 @@ class BasicUnit(nn.Module):
         if self.is_res:
             out_r += self.shortcut(x_r)
 
-        # concatenate
+        # 拼接
         out = torch.cat((x_l, out_r), 1)
         return shuffle_chnls(out, self.groups)
 

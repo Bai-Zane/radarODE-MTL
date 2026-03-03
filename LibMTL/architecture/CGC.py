@@ -7,14 +7,14 @@ from LibMTL.architecture.MMoE import MMoE
 
 
 class CGC(MMoE):
-    r"""Customized Gate Control (CGC).
-    
-    This method is proposed in `Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations (ACM RecSys 2020 Best Paper) <https://dl.acm.org/doi/10.1145/3383313.3412236>`_ \
-    and implemented by us. 
+    r"""定制化门控 (Customized Gate Control, CGC)。
+
+    该方法在 `Progressive Layered Extraction (PLE): A Novel Multi-Task Learning (MTL) Model for Personalized Recommendations (ACM RecSys 2020 Best Paper) <https://dl.acm.org/doi/10.1145/3383313.3412236>`_ 中提出，
+    并由我们实现。
 
     Args:
-        img_size (list): The size of input data. For example, [3, 244, 244] denotes input images with size 3x224x224.
-        num_experts (list): The numbers of experts shared by all the tasks and specific to each task, respectively. Each expert is an encoder network.
+        img_size (list): 输入数据的尺寸。例如，[3, 244, 244] 表示输入图像的尺寸为 3x224x224。
+        num_experts (list): 所有任务共享的专家数量和每个任务特定的专家数量。每个专家是一个编码器网络。
 
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):

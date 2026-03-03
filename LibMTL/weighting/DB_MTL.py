@@ -6,6 +6,18 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class DB_MTL(AbsWeighting):
+    r"""DB-MTL (Dual-Balancing Multi-Task Learning).
+
+    该方法通过双平衡策略实现多任务学习中的梯度平衡。
+
+    Args:
+        DB_beta (float): 梯度缓冲区的更新率。
+        DB_beta_sigma (float): 更新率的衰减系数。
+
+    .. warning::
+            DB_MTL 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
+
+    """
 
     def __init__(self):
         super(DB_MTL, self).__init__()

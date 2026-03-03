@@ -35,15 +35,15 @@ class _transform_resnet_cross(nn.Module):
         return ss_rep[3]
 
 class Cross_stitch(AbsArchitecture):
-    r"""Cross-stitch Networks (Cross_stitch).
-    
-    This method is proposed in `Cross-stitch Networks for Multi-task Learning (CVPR 2016) <https://openaccess.thecvf.com/content_cvpr_2016/papers/Misra_Cross-Stitch_Networks_for_CVPR_2016_paper.pdf>`_ \
-    and implemented by us. 
+    r"""交叉缝合网络 (Cross-stitch Networks, Cross_stitch)。
+
+    该方法在 `Cross-stitch Networks for Multi-task Learning (CVPR 2016) <https://openaccess.thecvf.com/content_cvpr_2016/papers/Misra_Cross-Stitch_Networks_for_CVPR_2016_paper.pdf>`_ 中提出，
+    并由我们实现。
 
     .. warning::
-            - :class:`Cross_stitch` does not work with multiple inputs MTL problem, i.e., ``multi_input`` must be ``False``.
+            - :class:`Cross_stitch` 不适用于多输入 MTL 问题，即 ``multi_input`` 必须为 ``False``。
 
-            - :class:`Cross_stitch` is only supported by ResNet-based encoders.
+            - :class:`Cross_stitch` 仅支持基于 ResNet 的编码器。
 
     """
     def __init__(self, task_name, encoder_class, decoders, rep_grad, multi_input, device, **kwargs):

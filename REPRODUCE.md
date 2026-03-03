@@ -1,19 +1,19 @@
-# radarODE-MTL Reproduction Guide
+# radarODE-MTL 复现指南
 
-This guide gives a practical, command-line workflow to reproduce dataset preparation and model training in this repo.
+本指南提供了一个实用的命令行工作流，用于复现本仓库中的数据集准备和模型训练。
 
-It supports:
+它支持：
 
-1. `rcg` mode (recommended, paper-aligned): preprocessed radar channels (`RCG`) + raw ECG
-2. `adc` mode (experimental): raw radar ADC cube + raw ECG
+1. `rcg` 模式（推荐，与论文一致）：预处理雷达通道（`RCG`）+ 原始 ECG
+2. `adc` 模式（实验性）：原始雷达 ADC 立方体 + 原始 ECG
 
-The generated training files match repository expectations:
+生成的训练文件符合仓库预期：
 
-- `sst_seg_*.npy` with shape `(50, 71, 120)`
-- `ecg_seg_*.npy` with variable cycle length
-- `anchor_seg_*.npy` with shape `(200,)`
+- `sst_seg_*.npy`，形状为 `(50, 71, 120)`
+- `ecg_seg_*.npy`，具有可变的周期长度
+- `anchor_seg_*.npy`，形状为 `(200,)`
 
-## 1) Environment Setup
+## 1) 环境设置
 
 ```bash
 python -m venv .venv
@@ -26,30 +26,30 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## 2) Prepare Raw Input Files
+## 2) 准备原始输入文件
 
-Each trial file should contain ECG plus radar data.
+每个试验文件应包含 ECG 和雷达数据。
 
-### Option A: RCG Mode (Recommended)
-This matches MMECG-style data where radar has already been converted to 50-channel cardiac signals.
+### 选项 A：RCG 模式（推荐）
+这与 MMECG 风格的数据匹配，其中雷达已经转换为 50 通道心脏信号。
 
-Expected keys:
+预期的键：
 
-- `ECG`: 1D waveform
-- `RCG`: 2D array `[time, channels]`
-- optional: `id`, `physistatus`
+- `ECG`：1D 波形
+- `RCG`：2D 数组 `[时间, 通道]`
+- 可选：`id`、`physistatus`
 
-### Option B: ADC Mode (Experimental)
-Expected keys:
+### 选项 B：ADC 模式（实验性）
+预期的键：
 
-- `ECG`: 1D waveform
-- `radar_adc`: 4D array `[frames, chirps, rx, adc_samples]` (complex or real+imag packed)
+- `ECG`：1D 波形
+- `radar_adc`：4D 数组 `[帧, 啁啾, 接收天线, ADC 样本]`（复数或实部+虚部打包）
 
-Note: ADC mode uses a reference extraction pipeline (range FFT + phase extraction + cardiac-band ranking). It is intended for reproducible processing, but exact behavior can differ from the original MMECG internal preprocessing.
+注意：ADC 模式使用参考提取流程（距离 FFT + 相位提取 + 心脏频带排序）。它旨在用于可复现的处理，但确切行为可能与原始 MMECG 内部预处理不同。
 
-## 3) Generate radarODE-MTL Segments
+## 3) 生成 radarODE-MTL 片段
 
-### 3.1 RCG Mode
+### 3.1 RCG 模式
 
 ```bash
 python tools/prepare_radarode_dataset.py \
@@ -67,7 +67,7 @@ python tools/prepare_radarode_dataset.py \
   --save-manifest
 ```
 
-### 3.2 ADC Mode
+### 3.2 ADC 模式
 
 ```bash
 python tools/prepare_radarode_dataset.py \
@@ -82,7 +82,7 @@ python tools/prepare_radarode_dataset.py \
   --save-manifest
 ```
 
-Output folder example:
+输出文件夹示例：
 
 ```text
 Dataset/
@@ -93,7 +93,7 @@ Dataset/
     ...
 ```
 
-## 4) Train radarODE-MTL
+## 4) 训练 radarODE-MTL
 
 ```bash
 python Projects/radarODE_plus/main.py \
@@ -116,7 +116,7 @@ python Projects/radarODE_plus/main.py \
   --aug_snr 100
 ```
 
-## 5) Test with a Saved Model
+## 5) 使用保存的模型进行测试
 
 ```bash
 python Projects/radarODE_plus/main.py \
@@ -130,21 +130,21 @@ python Projects/radarODE_plus/main.py \
   --aug_snr 100
 ```
 
-## 6) Default Design Choices Used in This Pipeline
+## 6) 本流程中使用的默认设计选择
 
-These defaults follow paper/repo behavior:
+这些默认值遵循论文/仓库的行为：
 
-- ECG peak detection: NeuroKit2 (`ECG_R_Peaks`)
-- single-cycle ECG target: variable-length cycle, later resampled to 200 in dataloader
-- SST settings: Morlet synchrosqueezed CWT, frequency range `[1, 25] Hz`
-- SST segment length: 4 seconds
-- SST time downsampling: 30 Hz (`120` time bins for 4 seconds)
-- radar channels: 50
+- ECG 峰值检测：NeuroKit2 (`ECG_R_Peaks`)
+- 单周期 ECG 目标：可变长度周期，之后在数据加载器中重采样为 200
+- SST 设置：Morlet 同步挤压 CWT，频率范围 `[1, 25] Hz`
+- SST 片段长度：4 秒
+- SST 时间下采样：30 Hz（4 秒对应 `120` 个时间箱）
+- 雷达通道：50
 
-## 7) Troubleshooting
+## 7) 故障排除
 
-- `Cannot find ECG/RCG key`: pass explicit `--ecg-key`, `--rcg-key`, or `--adc-key`.
-- MATLAB v7.3 loading issue: ensure `mat73` is installed.
-- Very few generated segments: check ECG quality and `--signal-fs` value.
-- GPU OOM: reduce `--batch_size` or `--num_workers`.
-- `TEST: nan ...` with tiny datasets: reduce `--batch_size` (dataloader uses `drop_last=True`).
+- `Cannot find ECG/RCG key`：传递显式的 `--ecg-key`、`--rcg-key` 或 `--adc-key`。
+- MATLAB v7.3 加载问题：确保已安装 `mat73`。
+- 生成的片段很少：检查 ECG 质量和 `--signal-fs` 值。
+- GPU OOM：减少 `--batch_size` 或 `--num_workers`。
+- 小数据集的 `TEST: nan ...`：减少 `--batch_size`（数据加载器使用 `drop_last=True`）。

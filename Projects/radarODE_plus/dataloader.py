@@ -6,7 +6,7 @@ sys.path.append(BASE_DIR)
 from spectrum_dataset import SpectrumECGDataset
 from torch.utils.data import DataLoader, ConcatDataset
 
-def des_path_finder(index,path):
+def des_path_finder(index, path):
     for roots, dirs, files in os.walk(path):
         for dir_ in dirs:
             if re.search(f'_{index}_', dir_) or re.match(fr'obj{index}_', dir_, flags=re.IGNORECASE):
@@ -30,7 +30,7 @@ def get_spectrum_ecg_obj(data_root, selected_IDs, batch_size=4, n_workers=8, is_
         test_sampler = None
         shuffle = True
     if visual:
-        # used for visualization
+        # 用于可视化
         shuffle = False
     gen = DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=n_workers, pin_memory=True,
                      drop_last=True, collate_fn=dataset_collate, sampler=test_sampler)

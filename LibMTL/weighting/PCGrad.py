@@ -6,13 +6,13 @@ import numpy as np
 from LibMTL.weighting.abstract_weighting import AbsWeighting
 
 class PCGrad(AbsWeighting):
-    r"""Project Conflicting Gradients (PCGrad).
-    
-    This method is proposed in `Gradient Surgery for Multi-Task Learning (NeurIPS 2020) <https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html>`_ \
-    and implemented by us.
+    r"""Project Conflicting Gradients (PCGrad，投影冲突梯度).
+
+    该方法在 `Gradient Surgery for Multi-Task Learning (NeurIPS 2020) <https://papers.nips.cc/paper/2020/hash/3fe78a8acf5fda99de95303940a2420c-Abstract.html>`_ 中提出，
+    并由我们实现。
 
     .. warning::
-            PCGrad is not supported by representation gradients, i.e., ``rep_grad`` must be ``False``.
+            PCGrad 不支持表示梯度，即 ``rep_grad`` 必须为 ``False``。
 
     """
     def __init__(self):
