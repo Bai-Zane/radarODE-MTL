@@ -1,0 +1,95 @@
+# ============================================================
+# radarODE-MTL 全局配置文件
+# 修改此文件代替命令行参数来控制训练/测试行为
+# ============================================================
+
+# ----- 通用配置 -----
+general:
+  mode: train              # 运行模式: train | test | cross_vali
+  seed: 777                # 随机种子
+  gpu_id: '0'              # GPU 编号（字符串），使用 CPU 时设为 'cpu'
+  save_path: ./Model_saved # 模型保存路径
+  load_path: null          # 加载已有检查点的路径，null 表示不加载
+  save_name: EGA           # 检查点文件名后缀
+
+# ----- 数据配置 -----
+data:
+  dataset_path: ./Dataset  # 数据集根路径
+  train_bs: 22             # 训练 batch size
+  test_bs: 22              # 测试 batch size
+  num_workers: 8           # DataLoader 工作进程数
+  aug_snr: 100             # 数据增强 SNR（100=无增强；其他值如 6/3/0/-1/-2/-3=对应SNR）
+  select_sample: false     # 是否只选取100个样本（调试用）
+  id_train_max: 88         # 数据集ID上限（仅在无法自动发现时使用）
+  test_ids: '75,76,77,78,79,80,81,82,83,84,85'  # 逗号分隔的测试 ID
+
+# ----- 训练配置 -----
+training:
+  epochs: 200              # 训练轮数
+  rep_grad: false          # 是否对共享表示计算梯度（true/false）
+  multi_input: false       # 每个任务是否使用独立输入（true/false）
+
+# ----- MTL 加权策略 -----
+weighting:
+  method: EGA              # 策略: EW | UW | GradNorm | GLS | RLW | MGDA | IMTL |
+                           #        PCGrad | GradVac | CAGrad | GradDrop | DWA |
+                           #        Nash_MTL | MoCo | Aligned_MTL | DB_MTL | Given_weight | EGA | STCH
+  # -- DWA --
+  T: 2.0
+  # -- GradNorm --
+  alpha: 1.5
+  # -- MGDA --
+  mgda_gn: none            # none | l2 | loss | loss+
+  # -- GradVac --
+  GradVac_beta: 0.5
+  GradVac_group_type: 0    # 0=whole_model | 1=all_layer | 2=all_matrix
+  # -- GradDrop --
+  leak: 0.0
+  # -- CAGrad --
+  calpha: 0.5
+  rescale: 1
+  # -- Nash_MTL --
+  update_weights_every: 1
+  optim_niter: 20
+  max_norm: 1.0
+  # -- MoCo --
+  MoCo_beta: 0.5
+  MoCo_beta_sigma: 0.5
+  MoCo_gamma: 0.1
+  MoCo_gamma_sigma: 0.5
+  MoCo_rho: 0
+  # -- DB_MTL --
+  DB_beta: 0.9
+  DB_beta_sigma: 0
+  # -- EGA --
+  EGA_temp: 1.0
+  # -- STCH --
+  STCH_mu: 1.0
+  STCH_warmup_epoch: 4
+
+# ----- MTL 架构 -----
+architecture:
+  method: HPS              # 架构: HPS | MTAN | Cross_stitch | CGC | PLE | MMoE | DSelect_k | LTB
+  # -- CGC / PLE / MMoE / DSelect_k --
+  img_size: null           # 示例: [3, 288, 384]
+  num_experts: null        # 示例: [1, 1, 1]
+  # -- DSelect_k --
+  num_nonzeros: 2
+  kgamma: 1.0
+
+# ----- 优化器 -----
+optimizer:
+  optim: sgd               # adam | sgd | adagrad | rmsprop
+  lr: 5.0e-3               # 学习率
+  weight_decay: 5.0e-4     # 权重衰减
+  momentum: 0.937          # 动量（仅 sgd）
+
+# ----- 学习率调度器 -----
+scheduler:
+  method: cos              # step | cos | exp | null（不使用调度器）
+  # -- step --
+  step_size: 100
+  gamma: 0.5
+  # -- cos --
+  eta_min: 5.0e-5
+  T_max: 100

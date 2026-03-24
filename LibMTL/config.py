@@ -1,195 +1,194 @@
-import argparse
+import os
+import types
 import numpy as np
 import torch
+import yaml
 
-save_path = '/home/zhangyuanyuan/LibMTL/Model_saved'
-data_root = '/home/zhangyuanyuan/Dataset/nyuv2/'
 
-_parser = argparse.ArgumentParser(description='Configuration for LibMTL')
-# general
-_parser.add_argument('--mode', type=str, default='train', help='train, test')
-_parser.add_argument('--seed', type=int, default=777, help='random seed')
-_parser.add_argument('--gpu_id', default='0', type=str, help='gpu_id') 
-_parser.add_argument('--weighting', type=str, default='EW',
-    help='loss weighing strategies, option: EW, UW, GradNorm, GLS, RLW, \
-        MGDA, PCGrad, GradVac, CAGrad, GradDrop, DWA, IMTL')
-_parser.add_argument('--arch', type=str, default='HPS',
-                    help='architecture for MTL, option: HPS, MTAN')
-_parser.add_argument('--rep_grad', action='store_true', default=False, 
-                    help='computing gradient for representation or sharing parameters')
-_parser.add_argument('--multi_input', action='store_true', default=False, 
-                    help='whether each task has its own input data')
-_parser.add_argument('--save_path', type=str, default=save_path, 
-                    help='save path')
-_parser.add_argument('--load_path', type=str, default=None, 
-                    help='load ckpt path')
-## optim
-_parser.add_argument('--optim', type=str, default='adam',
-                    help='optimizer for training, option: adam, sgd, adagrad, rmsprop')
-_parser.add_argument('--lr', type=float, default=1e-4, help='learning rate for all types of optim')
-_parser.add_argument('--momentum', type=float, default=0.9, help='momentum for sgd')
-_parser.add_argument('--weight_decay', type=float, default=1e-5, help='weight decay for all types of optim')
-## scheduler
-_parser.add_argument('--scheduler', type=str, #default='step',
-                    help='learning rate scheduler for training, option: step, cos, exp')
-_parser.add_argument('--step_size', type=int, default=100, help='step size for StepLR')
-_parser.add_argument('--gamma', type=float, default=0.5, help='gamma for StepLR')
+def load_config(config_path=None):
+    """从 YAML 配置文件加载所有配置项，返回 SimpleNamespace。
 
-# args for weighting
-## DWA
-_parser.add_argument('--T', type=float, default=2.0, help='T for DWA')
-## MGDA
-_parser.add_argument('--mgda_gn', default='none', type=str, 
-                    help='type of gradient normalization for MGDA, option: l2, none, loss, loss+')
-## GradVac
-_parser.add_argument('--GradVac_beta', type=float, default=0.5, help='beta for GradVac')
-_parser.add_argument('--GradVac_group_type', type=int, default=0, 
-                    help='parameter granularity for GradVac (0: whole_model; 1: all_layer; 2: all_matrix)')
-## GradNorm
-_parser.add_argument('--alpha', type=float, default=1.5, help='alpha for GradNorm')
-## GradDrop
-_parser.add_argument('--leak', type=float, default=0.0, help='leak for GradDrop')
-## CAGrad
-_parser.add_argument('--calpha', type=float, default=0.5, help='calpha for CAGrad')
-_parser.add_argument('--rescale', type=int, default=1, help='rescale for CAGrad')
-## Nash_MTL
-_parser.add_argument('--update_weights_every', type=int, default=1, help='update_weights_every for Nash_MTL')
-_parser.add_argument('--optim_niter', type=int, default=20, help='optim_niter for Nash_MTL')
-_parser.add_argument('--max_norm', type=float, default=1.0, help='max_norm for Nash_MTL')
-## MoCo
-_parser.add_argument('--MoCo_beta', type=float, default=0.5, help='MoCo_beta for MoCo')
-_parser.add_argument('--MoCo_beta_sigma', type=float, default=0.5, help='MoCo_beta_sigma for MoCo')
-_parser.add_argument('--MoCo_gamma', type=float, default=0.1, help='gamma for MoCo')
-_parser.add_argument('--MoCo_gamma_sigma', type=float, default=0.5, help='MoCo_gamma_sigma for MoCo')
-_parser.add_argument('--MoCo_rho', type=float, default=0, help='MoCo_rho for MoCo')
-## DB_MTL
-_parser.add_argument('--DB_beta', type=float, default=0.9, help=' ')
-_parser.add_argument('--DB_beta_sigma', type=float, default=0, help=' ')
-## EGA
-_parser.add_argument('--EGA_temp', type=float, default=1, help='temperature for EGA')
-## STCH
-_parser.add_argument('--STCH_mu', type=float, default=1.0, help=' ')
-_parser.add_argument('--STCH_warmup_epoch', type=int, default=4, help=' ')
-# args for architecture
-## CGC
-_parser.add_argument('--img_size', nargs='+', help='image size for CGC')
-_parser.add_argument('--num_experts', nargs='+', help='the number of experts for sharing and task-specific')
-## DSelect_k
-_parser.add_argument('--num_nonzeros', type=int, default=2, help='num_nonzeros for DSelect-k')
-_parser.add_argument('--kgamma', type=float, default=1.0, help='gamma for DSelect-k')
+    Args:
+        config_path (str | None): YAML 文件路径。为 None 时自动在项目根目录查找 config.yaml。
+    """
+    if config_path is None:
+        # 向上查找至包含 config.yaml 的目录
+        search_dir = os.path.dirname(os.path.abspath(__file__))
+        for _ in range(5):
+            candidate = os.path.join(search_dir, 'config.yaml')
+            if os.path.isfile(candidate):
+                config_path = candidate
+                break
+            search_dir = os.path.dirname(search_dir)
+        if config_path is None:
+            raise FileNotFoundError(
+                '未找到 config.yaml，请在项目根目录创建该文件或通过 load_config(path) 指定路径。'
+            )
 
-LibMTL_args = _parser
+    with open(config_path, 'r', encoding='utf-8') as f:
+        cfg = yaml.safe_load(f)
+
+    g   = cfg.get('general', {})
+    dat = cfg.get('data', {})
+    tr  = cfg.get('training', {})
+    w   = cfg.get('weighting', {})
+    ar  = cfg.get('architecture', {})
+    op  = cfg.get('optimizer', {})
+    sc  = cfg.get('scheduler', {})
+
+    params = types.SimpleNamespace(
+        # general
+        mode        = g.get('mode', 'train'),
+        seed        = int(g.get('seed', 777)),
+        gpu_id      = str(g.get('gpu_id', '0')),
+        save_path   = g.get('save_path', './Model_saved'),
+        load_path   = g.get('load_path', None),
+        save_name   = g.get('save_name', 'EGA'),
+        # data
+        dataset_path  = dat.get('dataset_path', './Dataset'),
+        train_bs      = int(dat.get('train_bs', 22)),
+        test_bs       = int(dat.get('test_bs', 22)),
+        num_workers   = int(dat.get('num_workers', 8)),
+        aug_snr       = int(dat.get('aug_snr', 100)),
+        select_sample = bool(dat.get('select_sample', False)),
+        id_train_max  = int(dat.get('id_train_max', 88)),
+        test_ids      = str(dat.get('test_ids', '75,76,77,78,79,80,81,82,83,84,85')),
+        # training
+        epochs      = int(tr.get('epochs', 200)),
+        rep_grad    = bool(tr.get('rep_grad', False)),
+        multi_input = bool(tr.get('multi_input', False)),
+        # weighting
+        weighting          = w.get('method', 'EW'),
+        T                  = float(w.get('T', 2.0)),
+        alpha              = float(w.get('alpha', 1.5)),
+        mgda_gn            = w.get('mgda_gn', 'none'),
+        GradVac_beta       = float(w.get('GradVac_beta', 0.5)),
+        GradVac_group_type = int(w.get('GradVac_group_type', 0)),
+        leak               = float(w.get('leak', 0.0)),
+        calpha             = float(w.get('calpha', 0.5)),
+        rescale            = int(w.get('rescale', 1)),
+        update_weights_every = int(w.get('update_weights_every', 1)),
+        optim_niter        = int(w.get('optim_niter', 20)),
+        max_norm           = float(w.get('max_norm', 1.0)),
+        MoCo_beta          = float(w.get('MoCo_beta', 0.5)),
+        MoCo_beta_sigma    = float(w.get('MoCo_beta_sigma', 0.5)),
+        MoCo_gamma         = float(w.get('MoCo_gamma', 0.1)),
+        MoCo_gamma_sigma   = float(w.get('MoCo_gamma_sigma', 0.5)),
+        MoCo_rho           = float(w.get('MoCo_rho', 0)),
+        DB_beta            = float(w.get('DB_beta', 0.9)),
+        DB_beta_sigma      = float(w.get('DB_beta_sigma', 0)),
+        EGA_temp           = float(w.get('EGA_temp', 1.0)),
+        STCH_mu            = float(w.get('STCH_mu', 1.0)),
+        STCH_warmup_epoch  = int(w.get('STCH_warmup_epoch', 4)),
+        # architecture
+        arch        = ar.get('method', 'HPS'),
+        img_size    = ar.get('img_size', None),
+        num_experts = ar.get('num_experts', None),
+        num_nonzeros = int(ar.get('num_nonzeros', 2)),
+        kgamma      = float(ar.get('kgamma', 1.0)),
+        # optimizer
+        optim        = op.get('optim', 'adam'),
+        lr           = float(op.get('lr', 1e-4)),
+        weight_decay = float(op.get('weight_decay', 1e-5)),
+        momentum     = float(op.get('momentum', 0.9)),
+        # scheduler
+        scheduler  = sc.get('method', None),
+        step_size  = int(sc.get('step_size', 100)),
+        gamma      = float(sc.get('gamma', 0.5)),
+        eta_min    = float(sc.get('eta_min', 5e-5)),
+        T_max      = int(sc.get('T_max', 100)),
+    )
+    return params
+
+
+# 加权方法的参数映射：方法名 -> [(参数名, 参数属性名), ...]
+WEIGHTING_PARAMS = {
+    'DWA': [('T', 'T')],
+    'GradNorm': [('alpha', 'alpha')],
+    'MGDA': [('mgda_gn', 'mgda_gn')],
+    'GradVac': [('GradVac_beta', 'GradVac_beta'), ('GradVac_group_type', 'GradVac_group_type')],
+    'GradDrop': [('leak', 'leak')],
+    'CAGrad': [('calpha', 'calpha'), ('rescale', 'rescale')],
+    'Nash_MTL': [('update_weights_every', 'update_weights_every'),
+                 ('optim_niter', 'optim_niter'), ('max_norm', 'max_norm')],
+    'MoCo': [('MoCo_beta', 'MoCo_beta'), ('MoCo_beta_sigma', 'MoCo_beta_sigma'),
+             ('MoCo_gamma', 'MoCo_gamma'), ('MoCo_gamma_sigma', 'MoCo_gamma_sigma'),
+             ('MoCo_rho', 'MoCo_rho')],
+    'DB_MTL': [('DB_beta', 'DB_beta'), ('DB_beta_sigma', 'DB_beta_sigma')],
+    'EGA': [('EGA_temp', 'EGA_temp')],
+    'STCH': [('STCH_mu', 'STCH_mu'), ('STCH_warmup_epoch', 'STCH_warmup_epoch')],
+}
+
+SUPPORTED_WEIGHTING = ['EW', 'UW', 'GradNorm', 'GLS', 'RLW', 'MGDA', 'IMTL',
+                       'PCGrad', 'GradVac', 'CAGrad', 'GradDrop', 'DWA',
+                       'Nash_MTL', 'MoCo', 'Aligned_MTL', 'DB_MTL', 'Given_weight', 'EGA', 'STCH']
+
+SUPPORTED_ARCH = ['HPS', 'Cross_stitch', 'MTAN', 'CGC', 'PLE', 'MMoE', 'DSelect_k', 'DIY', 'LTB']
 
 
 def prepare_args(params):
-    r"""返回超参数、优化器和学习率调度器的配置。
+    """返回超参数、优化器和学习率调度器的配置。
 
     Args:
-        params (argparse.Namespace): 命令行参数。
+        params (SimpleNamespace): 配置参数对象。
     """
     kwargs = {'weight_args': {}, 'arch_args': {}}
-    if params.weighting in ['EW', 'UW', 'GradNorm', 'GLS', 'RLW', 'MGDA', 'IMTL',
-                            'PCGrad', 'GradVac', 'CAGrad', 'GradDrop', 'DWA', 
-                            'Nash_MTL', 'MoCo', 'Aligned_MTL', 'DB_MTL', 'Given_weight', 'EGA', 'STCH']:
-        if params.weighting in ['DWA']:
-            if params.T is not None:
-                kwargs['weight_args']['T'] = params.T
-            else:
-                raise ValueError('DWA needs keywaord T')
-        elif params.weighting in ['GradNorm']:
-            if params.alpha is not None:
-                kwargs['weight_args']['alpha'] = params.alpha
-            else:
-                raise ValueError('GradNorm needs keywaord alpha')
-        elif params.weighting in ['MGDA']:
-            if params.mgda_gn is not None:
-                if params.mgda_gn in ['none', 'l2', 'loss', 'loss+']:
-                    kwargs['weight_args']['mgda_gn'] = params.mgda_gn
-                else:
-                    raise ValueError('No support mgda_gn {} for MGDA'.format(params.mgda_gn)) 
-            else:
-                raise ValueError('MGDA needs keywaord mgda_gn')
-        elif params.weighting in ['GradVac']:
-            if params.GradVac_beta is not None:
-                kwargs['weight_args']['GradVac_beta'] = params.GradVac_beta
-                kwargs['weight_args']['GradVac_group_type'] = params.GradVac_group_type
-            else:
-                raise ValueError('GradVac needs keywaord beta')
-        elif params.weighting in ['GradDrop']:
-            if params.leak is not None:
-                kwargs['weight_args']['leak'] = params.leak
-            else:
-                raise ValueError('GradDrop needs keywaord leak')
-        elif params.weighting in ['CAGrad']:
-            if params.calpha is not None and params.rescale is not None:
-                kwargs['weight_args']['calpha'] = params.calpha
-                kwargs['weight_args']['rescale'] = params.rescale
-            else:
-                raise ValueError('CAGrad needs keywaord calpha and rescale')
-        elif params.weighting in ['Nash_MTL']:
-            if params.update_weights_every is not None and params.optim_niter is not None and params.max_norm is not None:
-                kwargs['weight_args']['update_weights_every'] = params.update_weights_every
-                kwargs['weight_args']['optim_niter'] = params.optim_niter
-                kwargs['weight_args']['max_norm'] = params.max_norm
-            else:
-                raise ValueError('Nash_MTL needs update_weights_every, optim_niter, and max_norm')
-        elif params.weighting in ['MoCo']:
-            kwargs['weight_args']['MoCo_beta'] = params.MoCo_beta
-            kwargs['weight_args']['MoCo_beta_sigma'] = params.MoCo_beta_sigma
-            kwargs['weight_args']['MoCo_gamma'] = params.MoCo_gamma
-            kwargs['weight_args']['MoCo_gamma_sigma'] = params.MoCo_gamma_sigma
-            kwargs['weight_args']['MoCo_rho'] = params.MoCo_rho
-        elif params.weighting in ['DB_MTL']:
-            kwargs['weight_args']['DB_beta'] = params.DB_beta
-            kwargs['weight_args']['DB_beta_sigma'] = params.DB_beta_sigma
-        elif params.weighting in ['EGA']:
-            if params.EGA_temp is not None:
-                kwargs['weight_args']['EGA_temp'] = params.EGA_temp
-        elif params.weighting in ['STCH']:
-            kwargs['weight_args']['STCH_mu'] = params.STCH_mu
-            kwargs['weight_args']['STCH_warmup_epoch'] = params.STCH_warmup_epoch
-    else:
-        raise ValueError('No support weighting method {}'.format(params.weighting)) 
-        
-    if params.arch in ['HPS', 'Cross_stitch', 'MTAN', 'CGC', 'PLE', 'MMoE', 'DSelect_k', 'DIY', 'LTB']:
-        if params.arch in ['CGC', 'PLE', 'MMoE', 'DSelect_k']:
-            kwargs['arch_args']['img_size'] = tuple(params.img_size)#np.array(params.img_size, dtype=int).prod()
-            kwargs['arch_args']['num_experts'] = [int(num) for num in params.num_experts]
-        if params.arch in ['DSelect_k']:
-            kwargs['arch_args']['kgamma'] = params.kgamma
-            kwargs['arch_args']['num_nonzeros'] = params.num_nonzeros
-    else:
-        raise ValueError('No support architecture method {}'.format(params.arch)) 
-        
-    if params.optim in ['adam', 'sgd', 'adagrad', 'rmsprop']:
-        if params.optim == 'adam':
-            optim_param = {'optim': 'adam', 'lr': params.lr, 'weight_decay': params.weight_decay}
-        elif params.optim == 'sgd':
-            optim_param = {'optim': 'sgd', 'lr': params.lr, 
-                           'weight_decay': params.weight_decay, 'momentum': params.momentum}
-    else:
-        raise ValueError('No support optim method {}'.format(params.optim))
-        
+
+    # 处理加权方法参数
+    if params.weighting not in SUPPORTED_WEIGHTING:
+        raise ValueError(f'不支持的加权方法: {params.weighting}')
+
+    weight_args = WEIGHTING_PARAMS.get(params.weighting, [])
+    for param_name, attr_name in weight_args:
+        value = getattr(params, attr_name, None)
+        if value is None:
+            raise ValueError(f'{params.weighting} 需要参数 {param_name}')
+        if param_name == 'mgda_gn' and value not in ['none', 'l2', 'loss', 'loss+']:
+            raise ValueError(f'MGDA 不支持 mgda_gn={value}')
+        kwargs['weight_args'][param_name] = value
+
+    # 处理架构参数
+    if params.arch not in SUPPORTED_ARCH:
+        raise ValueError(f'不支持的架构方法: {params.arch}')
+
+    if params.arch in ['CGC', 'PLE', 'MMoE', 'DSelect_k']:
+        if params.img_size is None:
+            raise ValueError(f'{params.arch} 需要参数 img_size')
+        kwargs['arch_args']['img_size'] = tuple(params.img_size)
+        kwargs['arch_args']['num_experts'] = [int(num) for num in params.num_experts]
+    if params.arch == 'DSelect_k':
+        kwargs['arch_args']['kgamma'] = params.kgamma
+        kwargs['arch_args']['num_nonzeros'] = params.num_nonzeros
+
+    # 处理优化器参数
+    if params.optim not in ['adam', 'sgd', 'adagrad', 'rmsprop']:
+        raise ValueError(f'不支持的优化器: {params.optim}')
+
+    optim_param = {'optim': params.optim, 'lr': params.lr, 'weight_decay': params.weight_decay}
+    if params.optim == 'sgd':
+        optim_param['momentum'] = params.momentum
+
+    # 处理学习率调度器参数
+    scheduler_param = None
     if params.scheduler is not None:
-        if params.scheduler in ['step', 'cos', 'exp']:
-            if params.scheduler == 'step':
-                scheduler_param = {'scheduler': 'step', 'step_size': params.step_size, 'gamma': params.gamma}
-            if params.scheduler == 'cos':
-                scheduler_param = {'scheduler': 'cos', 'eta_min': params.eta_min, 'T_max': params.T_max}
+        if params.scheduler not in ['step', 'cos', 'exp']:
+            raise ValueError(f'不支持的调度器: {params.scheduler}')
+        if params.scheduler == 'step':
+            scheduler_param = {'scheduler': 'step', 'step_size': params.step_size, 'gamma': params.gamma}
+        elif params.scheduler == 'cos':
+            scheduler_param = {'scheduler': 'cos', 'eta_min': params.eta_min, 'T_max': params.T_max}
         else:
-            raise ValueError('No support scheduler method {}'.format(params.scheduler))
-    else:
-        scheduler_param = None
-    
+            scheduler_param = {'scheduler': 'exp'}
+
     _display(params, kwargs, optim_param, scheduler_param)
-    
+
     return kwargs, optim_param, scheduler_param
 
 def _display(params, kwargs, optim_param, scheduler_param):
     print('='*40)
     print('General Configuration:')
     print('\tMode:', params.mode)
-    print('\tWighting:', params.weighting)
+    print('\tWeighting:', params.weighting)
     print('\tArchitecture:', params.arch)
     print('\tRep_Grad:', params.rep_grad)
     print('\tMulti_Input:', params.multi_input)

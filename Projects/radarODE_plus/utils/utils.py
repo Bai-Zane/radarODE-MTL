@@ -1,145 +1,144 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
 
-from LibMTL.metrics import AbsMetric
 from LibMTL.loss import AbsLoss
-from copy import deepcopy
+from LibMTL.metrics import AbsMetric
+from Projects.radarODE_plus.spectrum_dataset import normalize_to_01_torch
 
 criterion_mse = nn.MSELoss()
 
-def normal_ecg_torch_01(ECG):
-    for itr in range(ECG.size(dim=0)):
-        ECG[itr] = (ECG[itr]-torch.min(ECG[itr])) / \
-            (torch.max(ECG[itr])-torch.min(ECG[itr]))
-    return ECG
 
-def cross_entropy_loss_shape(ecg_rcon, ecg_gts):
-    loss = nn.CrossEntropyLoss()
-    ecg_rcon = ecg_rcon.squeeze(1)
-    possi = ecg_gts.squeeze(1).softmax(dim=1)
-    return loss(ecg_rcon, possi)
+def _cross_entropy_loss_shape(ecg_pred, ecg_gt):
+    """计算 ECG 形状的交叉熵损失。"""
+    ecg_pred = ecg_pred.squeeze(1)
+    prob = ecg_gt.squeeze(1).softmax(dim=1)
+    return nn.CrossEntropyLoss()(ecg_pred, prob)
 
-def cross_entropy_loss_ppi(ecg_rcon, ecg_gts):
-    # the max/min ppi is 252/97, so we can use 155 as the range
-    # count how many -1 are there in each batch of ecg_gts
-    ecg_rcon, ecg_gts = ecg_rcon.squeeze(1), ecg_gts.squeeze(1)
-    counts = ecg_gts.size(1)-(ecg_gts == -10).sum(dim=1)
-    batch_indices = torch.arange(ecg_gts.size(0))
-    ecg_gts = torch.zeros_like(ecg_gts)
-    ecg_gts[batch_indices, counts-1] = 1000
-    # ecg_gts[batch_indices, counts-1] = 1
-    loss = nn.CrossEntropyLoss()
-    possi = ecg_gts.softmax(dim=1)
-    return loss(ecg_rcon, possi)
 
-def ppi_error(ecg_rcon, ecg_gts):
-    ecg_rcon, ecg_gts = ecg_rcon.squeeze(1), ecg_gts.squeeze(1)
-    counts = ecg_gts.size(1)-(ecg_gts == -10).sum(dim=1)+1  # ppi_gts
-    batch_indices = torch.arange(ecg_gts.size(0))
-    ppi_pred = ecg_rcon.argmax(dim=1)
-    return torch.mean(torch.abs(ppi_pred - counts)/200)
+def _cross_entropy_loss_ppi(ecg_pred, ecg_gt):
+    """计算 PPI 的交叉熵损失。"""
+    ecg_pred = ecg_pred.squeeze(1)
+    ecg_gt = ecg_gt.squeeze(1)
 
-# def anchor_error(ecg_rcon, ecg_gts):
-#     ecg_rcon, ecg_gts = ecg_rcon.squeeze(1), ecg_gts.squeeze(1)
+    # 计算有效 PPI 位置
+    valid_counts = ecg_gt.size(1) - (ecg_gt == -10).sum(dim=1)
+    batch_indices = torch.arange(ecg_gt.size(0))
 
-def r2_score(y_true, y_pred):
-    y_true_mean = torch.mean(y_true)
-    ss_total = torch.sum((y_true - y_true_mean) ** 2)
-    ss_residual = torch.sum((y_true - y_pred) ** 2)
-    r2 = 1 - ss_residual / ss_total
-    return r2
+    ecg_gt = torch.zeros_like(ecg_gt)
+    ecg_gt[batch_indices, valid_counts - 1] = 1000
 
-# ECG shape Metric
+    prob = ecg_gt.softmax(dim=1)
+    return nn.CrossEntropyLoss()(ecg_pred, prob)
+
+
+def _compute_ppi_error(ecg_pred, ecg_gt):
+    """计算 PPI 预测误差。"""
+    ecg_pred = ecg_pred.squeeze(1)
+    ecg_gt = ecg_gt.squeeze(1)
+
+    valid_counts = ecg_gt.size(1) - (ecg_gt == -10).sum(dim=1) + 1
+    ppi_pred = ecg_pred.argmax(dim=1)
+
+    return torch.mean(torch.abs(ppi_pred - valid_counts) / 200)
+
+
 class shapeMetric(AbsMetric):
+    """ECG 形状评估指标。"""
+
     def __init__(self):
-        super(shapeMetric, self).__init__()
+        super().__init__()
         self.mse_record = []
         self.ce_record = []
         self.norm_mse_record = []
+
     def update_fun(self, pred, gt):
-        gt = torch.clone(gt).detach()
-        gt = normal_ecg_torch_01(gt).to(pred.device)
-        mse = criterion_mse(pred, gt)
-        pred_norm = normal_ecg_torch_01(torch.clone(pred).detach())
-        self.mse_record.append(mse.item())
+        gt = normalize_to_01_torch(gt.clone().detach()).to(pred.device)
+        pred_norm = normalize_to_01_torch(pred.clone().detach())
+
+        self.mse_record.append(criterion_mse(pred, gt).item())
         self.norm_mse_record.append(criterion_mse(pred_norm, gt).item())
-        self.bs.append(pred.size()[0])
-        ce = cross_entropy_loss_shape(pred, gt)
-        self.ce_record.append(ce.item())
+        self.ce_record.append(_cross_entropy_loss_shape(pred, gt).item())
+        self.bs.append(pred.size(0))
+
     def score_fun(self):
         records = np.array(self.mse_record)
         batch_size = np.array(self.bs)
-        mse = (records*batch_size).sum()/(sum(batch_size))
-        records = np.array(self.ce_record)
-        ce = (records*batch_size).sum()/(sum(batch_size))
-        norm_mse = (np.array(self.norm_mse_record)*batch_size).sum()/(sum(batch_size))
+        mse = (records * batch_size).sum() / batch_size.sum()
+
+        ce = (np.array(self.ce_record) * batch_size).sum() / batch_size.sum()
+        norm_mse = (np.array(self.norm_mse_record) * batch_size).sum() / batch_size.sum()
+
         return [norm_mse, mse, ce]
+
     def reinit(self):
         self.mse_record = []
         self.ce_record = []
         self.norm_mse_record = []
         self.bs = []
-# mse loss as shapeloss
+
+
 class shapeLoss(AbsLoss):
-    def __init__(self):
-        super(shapeLoss, self).__init__()
+    """ECG 形状损失函数。"""
+
     def compute_loss(self, pred, gt):
-        gt = torch.clone(gt).detach()
-        gt = normal_ecg_torch_01(gt).to(pred.device)
+        gt = normalize_to_01_torch(gt.clone().detach()).to(pred.device)
         return criterion_mse(pred, gt)
-        # return r2_score(pred, gt)
-# PPI Metric
+
+
 class ppiMetric(AbsMetric):
+    """PPI 评估指标。"""
+
     def __init__(self):
-        super(ppiMetric, self).__init__()
+        super().__init__()
         self.ce_record = []
-        self.ppi_record = [] # error in seconds
+        self.ppi_record = []
+
     def update_fun(self, pred, gt):
-        ce = cross_entropy_loss_ppi(pred, gt)
-        self.ce_record.append(ce.item())
-        self.bs.append(pred.size()[0])
-        ppi = ppi_error(pred, gt)
-        self.ppi_record.append(ppi.item())
+        self.ce_record.append(_cross_entropy_loss_ppi(pred, gt).item())
+        self.ppi_record.append(_compute_ppi_error(pred, gt).item())
+        self.bs.append(pred.size(0))
+
     def score_fun(self):
         records = np.array(self.ce_record)
         batch_size = np.array(self.bs)
-        ce = (records*batch_size).sum()/(sum(batch_size))
-        records = np.array(self.ppi_record)
-        ppi = (records*batch_size).sum()/(sum(batch_size))
+        ce = (records * batch_size).sum() / batch_size.sum()
+
+        ppi = (np.array(self.ppi_record) * batch_size).sum() / batch_size.sum()
         return [ppi, ce]
+
     def reinit(self):
         self.ce_record = []
         self.ppi_record = []
         self.bs = []
 
-# ce loss for ppi
+
 class ppiLoss(AbsLoss):
-    def __init__(self):
-        super(ppiLoss, self).__init__()
+    """PPI 损失函数。"""
+
     def compute_loss(self, pred, gt):
-        return cross_entropy_loss_ppi(pred, gt)
-    
-# anchor Metric only use mse
+        return _cross_entropy_loss_ppi(pred, gt)
+
+
 class anchorMetric(AbsMetric):
-    def __init__(self):
-        super(anchorMetric, self).__init__()
+    """Anchor 评估指标。"""
+
     def update_fun(self, pred, gt):
-        gt = torch.clone(gt).detach()
-        # gt = normal_ecg_torch_01(gt).to(pred.device)
-        pred_norm = normal_ecg_torch_01(torch.clone(pred).detach())
+        pred_norm = normalize_to_01_torch(pred.clone().detach())
+        gt = gt.clone().detach()
         mse = criterion_mse(pred_norm, gt)
         self.record.append(mse.item())
-        self.bs.append(pred.size()[0])
+        self.bs.append(pred.size(0))
+
     def score_fun(self):
         records = np.array(self.record)
         batch_size = np.array(self.bs)
-        return [(records*batch_size).sum()/(sum(batch_size))]
+        return [(records * batch_size).sum() / batch_size.sum()]
+
+
 class anchorLoss(AbsLoss):
-    def __init__(self):
-        super(anchorLoss, self).__init__()
+    """Anchor 损失函数。"""
+
     def compute_loss(self, pred, gt):
-        gt = torch.clone(gt).detach()
-        gt = normal_ecg_torch_01(gt).to(pred.device)
+        gt = normalize_to_01_torch(gt.clone().detach()).to(pred.device)
         return criterion_mse(pred, gt)

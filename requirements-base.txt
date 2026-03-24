@@ -1,0 +1,11 @@
+# 不包含 torch 的依赖列表
+# torch 需要根据 CUDA 版本单独安装
+
+numpy>=1.24
+scipy>=1.10
+tqdm>=4.66
+torchinfo>=1.8
+neurokit2>=0.2.7
+ssqueezepy>=0.6.5
+mat73>=0.65
+pyyaml>=6.0
